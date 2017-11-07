@@ -8,6 +8,8 @@ namespace DSU{
     ////////////////////////////////////////////
 
     Dsu::Dsu(size_type size) : _parent(size){
+        for(size_type i = 0 ; i < size ; i++)
+            _parent[i] = i;
     }
 
     void Dsu::add_node(size_type parent){
