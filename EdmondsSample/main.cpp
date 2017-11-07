@@ -46,8 +46,11 @@ void read_file(char *file_name, ED::Graph &graph){
 
 
         //Reading edge
-        if(input[0] == 'e')
+        if(input[0] == 'e'){
             sscanf(input, "e %d %d", &u, &v);      
+            u--; v--;
+            graph.add_edge(u,v);
+        }
          
     }
     fclose(file);
