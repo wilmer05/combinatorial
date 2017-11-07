@@ -10,11 +10,10 @@ namespace ALG{
     class Edmonds{
     
         public:
-            Edmonds() = default;
             Edmonds(size_type);
 
-            void run(); 
-            ED::Graph extract_solution();
+//            void run(); 
+//            ED::Graph extract_solution();
 
 
         private:

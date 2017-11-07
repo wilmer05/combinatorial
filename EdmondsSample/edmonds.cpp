@@ -2,16 +2,15 @@
 
 namespace ALG{
 
-    Edmonds :: Edmonds(size_type size){
-        graph = ED::Graph(size);
+    Edmonds :: Edmonds(size_type size) : graph(size){
         dsu = DSU::Dsu(size);
     }
 
 
-    void run(){
+//    void run(){
 
      
     
-    }
+//    }
 
 };
