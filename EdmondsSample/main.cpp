@@ -2,7 +2,7 @@
 #include <cstdlib>
 
 #include "graph.hpp"
-
+#include "edmonds.hpp"
 //! return graph consisting of path with \c num_nodes many vertices
 static ED::Graph create_path(ED::NodeId num_nodes)
 {
