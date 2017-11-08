@@ -27,6 +27,7 @@ namespace DSU{
             size_type find(size_type);
             void join(size_type, size_type);
             size_type num_nodes() const;
+            bool have_same_tree(size_type, size_type) ;
 
         private:
             std::vector<size_type> _parent; 

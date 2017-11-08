@@ -35,4 +35,8 @@ namespace DSU{
         _parent[parent_u] = parent_v;
     }
 
+    bool Dsu::have_same_tree(size_type node_u, size_type node_v){
+        return find(node_u) == find(node_v); 
+    }
+
 };
