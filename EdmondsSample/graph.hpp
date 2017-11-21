@@ -121,6 +121,11 @@ public:
    **/
    void add_edge(NodeId node1_id, NodeId node2_id);
 
+    /**
+      @brief Adds a node to the graph
+   **/
+   void add_node();
+
    /**
      @brief Prints the graph to the given ostream in DIMACS format.
    **/
@@ -164,6 +169,13 @@ Node const & Graph::node(NodeId const id) const
    return _nodes.at(id);
 }
 //END: Inline section
+
+
+inline
+void Graph::add_node()
+{
+   _nodes.push_back(Node::Node());
+}
 
 } // namespace ED
 

@@ -4,13 +4,27 @@
 #include "graph.hpp"
 #include "dsu.hpp" 
 #include <queue>
-namespace ALG{
+
+/**
+    @file edmonds.hpp
+
+    @brief This file implements the Edmond's algorithm
+**/
+namespace ALG{ // for the implementation of Edmonds Algorithm
 
     using size_type = std::size_t;
 
+
+    /** 
+        @class Edmonds
+
+        @brief Implements the edmonds algorithm, it has every operation in different methods, like shrinking, augment and extension
+    **/
     class Edmonds{
     
         public:
+           
+           /** @brief Constructor, **/
            Edmonds(size_type);
 
 
@@ -35,6 +49,10 @@ namespace ALG{
 
            void shrink(size_type, size_type);
 
+           bool node_closes_cycle(size_type);
+
+           void remove_not_contained_edges(std::vector<std::pair<size_type, size_type> > &edges);
+
         private:
             ED::Graph graph;
             DSU::Dsu dsu;
@@ -46,6 +64,11 @@ namespace ALG{
             std::vector<bool> odd_node;
             std::vector<size_type> parent;
 
+
+            //Do I need this? \/
+            std::vector<std::pair<int,int> > cycle_edge;
+            std::vector<bool> visited;
+            std::vector<std::vector<std::pair< size_type, size_type> > > edges_in_cycle; 
     }; 
 
 
