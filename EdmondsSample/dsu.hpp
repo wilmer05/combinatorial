@@ -31,6 +31,8 @@ namespace DSU{
             /** @brief Clean the current tree, leaving an empty tree **/
             void clean();
 
+            /** @brief Clean the current tree, leaving the same tree or the original size (before the added composed nodes) and reset the parents of the nodes in the vector*/
+            void clean(std::vector<size_type> const &nodes);
             /** @brief Finds the root of the tree where the node belongs to**/
             size_type find(size_type node);
 
@@ -49,6 +51,7 @@ namespace DSU{
 
         private:
             std::vector<size_type> _parent; 
+            size_type original_size;
               
 
     }; // Class Dsu
@@ -57,6 +60,13 @@ inline void Dsu::clean() {
 
     _parent.clear();
 
+}
+
+inline void Dsu::clean(std::vector<size_type> const &nodes){
+    for(size_type i = 0 ; i < nodes.size(); i++){
+        _parent[nodes[i]] = nodes[i];
+    }
+    _parent.resize(original_size);
 }
 
 inline size_type Dsu::num_nodes() const{

@@ -8,6 +8,7 @@ namespace DSU{
     ////////////////////////////////////////////
 
     Dsu::Dsu(size_type size) : _parent(size){
+        original_size = size;
         for(size_type i = 0 ; i < size ; i++)
             _parent[i] = i;
     }

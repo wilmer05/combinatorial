@@ -49,9 +49,9 @@ namespace ALG{ // for the implementation of Edmonds Algorithm
 
            void shrink(size_type, size_type);
 
-           bool node_closes_cycle(size_type);
-
            void remove_not_contained_edges(std::vector<std::pair<size_type, size_type> > &edges);
+
+            void augment_matching(size_type node, size_type parent);
 
         private:
             ED::Graph graph;
@@ -69,6 +69,9 @@ namespace ALG{ // for the implementation of Edmonds Algorithm
             std::vector<std::pair<int,int> > cycle_edge;
             std::vector<bool> visited;
             std::vector<std::vector<std::pair< size_type, size_type> > > edges_in_cycle; 
+            std::vector<size_type> node_closes_cycle;
+            std::vector<size_type> nodes_in_tree;
+            std::vector<size_type> frustrated;
     }; 
 
 
