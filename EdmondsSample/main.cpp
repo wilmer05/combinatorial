@@ -56,6 +56,33 @@ void read_file(char *file_name, ED::Graph &graph){
     fclose(file);
 }
 
+void solve_edmonds(ED :: Graph &g, ED :: Graph &hint){
+    ALG::Edmonds algorithm(g.num_nodes());
+
+    for(ED::size_type node = 0 ; node < g.num_nodes(); node++){
+        for(ED ::size_type neighbour : g.node( node ).neighbors()){
+            algorithm.graph.add_edge(node, neighbour);
+        } 
+    }
+    for(ED::size_type node = 0 ; node < hint.num_nodes(); node++){
+        for(ED::size_type neighbour : hint.node( node ).neighbors()){
+            algorithm.match(node, neighbour);
+        } 
+    }
+    for(ED::size_type node = 0 ; node < g.num_nodes(); node++){
+        for(ED ::size_type neighbour : g.node( node ).neighbors()){
+            if(algorithm.exposed_vertex(node) && algorithm.exposed_vertex(neighbour)){
+                algorithm.match(node, neighbour);
+                break;
+             }
+        } 
+    }
+    algorithm.run();
+
+
+      
+}
+
 int main(int argc, char**argv)
 {
     ED :: Graph graph(0), initial_matching(0);
@@ -73,6 +100,8 @@ int main(int argc, char**argv)
             std::cout << "Reading hint\n";
             read_file(argv[4], initial_matching); 
         }
+
+        solve_edmonds(graph, initial_matching); 
 
     } else
         return usage(); 
