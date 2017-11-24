@@ -36,7 +36,7 @@ namespace ALG{ // for the implementation of Edmonds Algorithm
            
 //            ED::Graph extract_solution();
 
-           void  match(size_type, size_type);
+           void match(size_type, size_type);
 
            void add_edge_to_pending_list(size_type, size_type);
 
@@ -62,7 +62,12 @@ namespace ALG{ // for the implementation of Edmonds Algorithm
 
             size_type get_next_node_to_match(size_type node, int incident_kind_of_edge);
 
+            void print_matching();
+
             ED::Graph graph;
+
+            void add_neighbours_of_last_cycle_odd_nodes();
+
         private:
             DSU::Dsu dsu;
             std::queue<std::pair<size_type, size_type> > pending_edges; 

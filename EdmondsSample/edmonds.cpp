@@ -1,6 +1,7 @@
 #include"edmonds.hpp"
 #include <utility>
 #include <vector>
+#include <iostream>
 
 namespace ALG{
 
@@ -9,7 +10,7 @@ namespace ALG{
         num_original_nodes = num_nodes;
         matched_to.resize(num_nodes);
         belongs_to_pseudonode.resize(num_nodes);
-        for(size_type i =static_cast<size_type>(0) ; i < num_nodes;i++){
+        for(size_type i = 0 ; i < num_nodes;i++){
             matched_to[i] = i;
             belongs_to_pseudonode[i] = i;
             parent[i] = i;
@@ -96,9 +97,13 @@ namespace ALG{
 
     void Edmonds::remove_not_contained_edges(std::vector<std::pair<size_type, size_type> > &edges){
         int idx = -1;
+        std::cout << "Removing\n";
         for(size_type i = 0 ; i < edges.size() && idx < 0; i++)  {
+            std::cout << edges[i].first << " " << edges[i].second << "\n";
+
             size_type parent_a = dsu.find(edges[i].first);
             size_type parent_b = dsu.find(edges[i].second);
+            std::cout << parent_a << " " << parent_b << "\n";
             if(!visited[parent_a] || !visited[parent_b])
                 idx = i;
         }
@@ -115,8 +120,6 @@ namespace ALG{
         size_type num_nodes = dsu.num_nodes();
         dsu.add_node();
 
-        //dsu.join(node_u, node_v);
-        //dsu.set_parent(node_u, num_nodes);
          
         size_type r_cycle_node, l_cycle_node;
         r_cycle_node = dsu.find(node_u);
@@ -137,13 +140,16 @@ namespace ALG{
             size_type parent_r = dsu.find(parent[r_cycle_node]);
             size_type parent_l = dsu.find(parent[l_cycle_node]);
             
+            std::cout << num_original_nodes << "\n";
             if(!exposed_vertex(r_cycle_node)){
                 r_path.push_back(std::make_pair(actual_node_to_parent[r_cycle_node], parent[r_cycle_node]));
-               r_path_pseudonodes.push_back(std::make_pair(r_cycle_node, dsu.find(parent[r_cycle_node]))); 
+                r_path_pseudonodes.push_back(std::make_pair(r_cycle_node, dsu.find(parent[r_cycle_node]))); 
+                std::cout << "Actual " << r_cycle_node << " " << actual_node_to_parent.size() << " " << actual_node_to_parent[r_cycle_node] << "\n";
             }
             if(!exposed_vertex(l_cycle_node)){
                 l_path.push_back(std::make_pair(actual_node_to_parent[l_cycle_node], parent[l_cycle_node]));
-               l_path_pseudonodes.push_back(std::make_pair(l_cycle_node, dsu.find(parent[l_cycle_node]))); 
+                l_path_pseudonodes.push_back(std::make_pair(l_cycle_node, dsu.find(parent[l_cycle_node]))); 
+                std::cout << "Actual " << l_cycle_node << " " << actual_node_to_parent.size() << " " << actual_node_to_parent[l_cycle_node] << "\n";
             }
             r_cycle_node = parent_r;
             l_cycle_node = parent_l;
@@ -162,7 +168,7 @@ namespace ALG{
                 if(visited[l_cycle_node]) tmp_node = common_predecessor = l_cycle_node;
 
                 //Set as univisted nodes not in the cycle
-                while(visited[tmp_node]){
+                while(visited[tmp_node] && tmp_node != parent[tmp_node]){
                     visited[tmp_node] = false;
                     tmp_node = dsu.find(parent[tmp_node]);
                 }
@@ -218,9 +224,13 @@ namespace ALG{
         belongs_to_pseudonode.push_back(num_nodes);
         node_closes_cycle.push_back(common_predecessor);
 
-        parent.push_back(dsu.find(parent[common_predecessor]));
-        actual_node_to_parent.push_back(actual_node_to_parent[dsu.find(common_predecessor)]);
+        parent.push_back(parent[common_predecessor]);
+        actual_node_to_parent.push_back(actual_node_to_parent[common_predecessor]);
         augmented.push_back(false);
+
+
+//        dsu.join(node_u, node_v);
+//        dsu.set_parent(node_u, num_nodes);
     }
 
     bool Edmonds::is_pseudonode(size_type node){
@@ -322,10 +332,37 @@ namespace ALG{
     
     }
 
+    void Edmonds::add_neighbours_of_last_cycle_odd_nodes(){
+         size_type last_cycle = edges_in_cycle.size() - 1;
+
+
+         //We add edges from odd nodes
+         //Every node is actually two times, so we care that
+         //we don't add unnecesary edges
+         for(size_type i =0 ; i < edges_in_cycle[last_cycle].size(); i++){
+             size_type node_a = edges_in_cycle[last_cycle][i].first;
+             size_type node_b = edges_in_cycle[last_cycle][i].second;
+
+             if(visited[node_a] && odd_node[node_a]){
+                 add_neighbors_to_pending_list(node_a);        
+             }
+                 
+             visited[node_a] = false;
+
+             if(visited[node_b] && odd_node[node_b]){
+                 add_neighbors_to_pending_list(node_b);        
+             }
+             visited[node_b] = false;
+
+         }
+
+    }
+
     void Edmonds::grow_tree(size_type root_node){
         on_tree[root_node] = true;
         add_neighbors_to_pending_list(root_node);
         even_node[root_node] = true;
+        nodes_in_tree.push_back(root_node);
 
 
         while(pending_edges.size()){
@@ -360,29 +397,10 @@ namespace ALG{
            }
            //Shrink
            else{
+                std::cout << "Shrinking\n";
                 shrink(node_x, node_y);         
-                size_type last_cycle = edges_in_cycle.size() - 1;
-
-
-                //We add edges from odd nodes
-                //Every node is actually two times, so we care that
-                //we don't add unnecesary edges
-                for(size_type i =0 ; i < edges_in_cycle[last_cycle].size(); i++){
-                    size_type node_a = edges_in_cycle[last_cycle][i].first;
-                    size_type node_b = edges_in_cycle[last_cycle][i].second;
-
-                    if(visited[node_a] && odd_node[node_a]){
-                        add_neighbors_to_pending_list(node_a);        
-                    }
-                        
-                    visited[node_a] = false;
-
-                    if(visited[node_b] && odd_node[node_b]){
-                        add_neighbors_to_pending_list(node_b);        
-                    }
-                    visited[node_b] = false;
-
-                }
+                std::cout << "Out of shrinking\n";
+                add_neighbours_of_last_cycle_odd_nodes();
            }
 
         } 
@@ -400,17 +418,18 @@ namespace ALG{
     void Edmonds::run(){
        reset_vectors(); 
       
-       for(size_type i =static_cast<size_type>(0) ; i < num_original_nodes; i++)
+       for(size_type i =static_cast<size_type>(0) ; i < num_original_nodes; i++){
             if(exposed_vertex(i) && !frustrated[i]){
+                std::cout << "root " << i << "\n";
                 current_root  = i;
                 grow_tree(i);
             }
+       }
 
     }
-
     
     //Function that matches node_u to node_v
-    inline void  Edmonds::match(size_type node_u, size_type node_v){
+    void Edmonds::match(size_type node_u, size_type node_v){
           matched_to[node_u] = node_v;
           matched_to[node_v] = node_u;
     }
@@ -428,6 +447,23 @@ namespace ALG{
                 add_edge_to_pending_list(node, neighbour); 
                 on_tree[repr_neigh] = true;
             }
+        }
+    }
+
+    void Edmonds::print_matching(){
+
+        std::vector<std::pair<size_type, size_type> > matching;
+
+        for(size_type i = 0  ; i < num_original_nodes; i++)
+            if(matched_to[i] > i)
+                matching.push_back(std::make_pair(i+1, matched_to[i] + 1));
+        
+        std::cout << "p edge " << num_original_nodes << " " << matching.size() << "\n";
+        for(size_type i=0 ; i < matching.size(); i++){
+            std::cout << "e " << matching[i].first << " " << matching[i].second;
+            if(i + 1 < matching.size())
+                std::cout <<"\n";
+
         }
     }
 };

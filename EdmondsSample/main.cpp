@@ -7,6 +7,7 @@
 const int max_string_size = 50000;
 char input[max_string_size];
 
+ALG::Edmonds algorithm(0);
 //! return graph consisting of path with \c num_nodes many vertices
 /*static ED::Graph create_path(ED::NodeId num_nodes)
 {
@@ -57,20 +58,20 @@ void read_file(char *file_name, ED::Graph &graph){
 }
 
 void solve_edmonds(ED :: Graph &g, ED :: Graph &hint){
-    ALG::Edmonds algorithm(g.num_nodes());
-
-    for(ED::size_type node = 0 ; node < g.num_nodes(); node++){
-        for(ED ::size_type neighbour : g.node( node ).neighbors()){
+    algorithm = ALG::Edmonds(g.num_nodes());
+    algorithm.graph = g;
+    /*for(ED::size_type node = 0 ; node < g.num_nodes(); node++){
+        for(ED::size_type neighbour : g.node( node ).neighbors()){
             algorithm.graph.add_edge(node, neighbour);
         } 
-    }
-    for(ED::size_type node = 0 ; node < hint.num_nodes(); node++){
+    }*/
+    for(ALG::size_type node = 0 ; node < hint.num_nodes(); node++){
         for(ED::size_type neighbour : hint.node( node ).neighbors()){
             algorithm.match(node, neighbour);
         } 
     }
-    for(ED::size_type node = 0 ; node < g.num_nodes(); node++){
-        for(ED ::size_type neighbour : g.node( node ).neighbors()){
+    for(ALG::size_type node = 0 ; node < g.num_nodes(); node++){
+        for(ALG::size_type neighbour : g.node( node ).neighbors()){
             if(algorithm.exposed_vertex(node) && algorithm.exposed_vertex(neighbour)){
                 algorithm.match(node, neighbour);
                 break;
@@ -79,6 +80,7 @@ void solve_edmonds(ED :: Graph &g, ED :: Graph &hint){
     }
     algorithm.run();
 
+    algorithm.print_matching();
 
       
 }
