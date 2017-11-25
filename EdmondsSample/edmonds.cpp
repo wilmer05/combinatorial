@@ -2,6 +2,7 @@
 #include <utility>
 #include <vector>
 #include <iostream>
+#include <cassert>
 
 namespace ALG{
 
@@ -70,7 +71,10 @@ namespace ALG{
 
     void Edmonds::extend_tree(size_type node, size_type even_parent){
         size_type match = matched_to[node];
-        
+       
+        //assert(on_tree[even_parent]);
+        //assert(!on_tree[node]);
+        //assert(!on_tree[match]);
         odd_node[node] = true;
         odd_node[match] = false;
         even_node[match] = true;
@@ -78,6 +82,7 @@ namespace ALG{
 
         parent[match] = node;
         parent[node] = even_parent;
+        std::cout << "Added " << node << " and " << match << "\n";
 
         actual_node_to_parent[node] = node;
         actual_node_to_parent[match] = match;
@@ -97,13 +102,13 @@ namespace ALG{
 
     void Edmonds::remove_not_contained_edges(std::vector<std::pair<size_type, size_type> > &edges){
         int idx = -1;
-        std::cout << "Removing\n";
+        //std::cout << "Removing\n";
         for(size_type i = 0 ; i < edges.size() && idx < 0; i++)  {
-            std::cout << edges[i].first << " " << edges[i].second << "\n";
+            //std::cout << edges[i].first << " " << edges[i].second << "\n";
 
             size_type parent_a = dsu.find(edges[i].first);
             size_type parent_b = dsu.find(edges[i].second);
-            std::cout << parent_a << " " << parent_b << "\n";
+            //std::cout << parent_a << " " << parent_b << "\n";
             if(!visited[parent_a] || !visited[parent_b])
                 idx = i;
         }
@@ -113,9 +118,6 @@ namespace ALG{
     }
 
     void Edmonds::shrink(size_type node_u, size_type node_v){
-        
-        cycle_edge.push_back(std::make_pair(node_u, node_v));
-
 
         size_type num_nodes = dsu.num_nodes();
         dsu.add_node();
@@ -125,55 +127,68 @@ namespace ALG{
         r_cycle_node = dsu.find(node_u);
         l_cycle_node = dsu.find(node_v);
         
-        visited[r_cycle_node] = true;
-        visited[l_cycle_node] = true;
+        visited[r_cycle_node] = visited[l_cycle_node] = true;
 
         std::vector<std::pair<size_type,size_type> > l_path, r_path, l_path_pseudonodes, r_path_pseudonodes;
         l_path.push_back(std::make_pair(node_u, node_v));
         l_path_pseudonodes.push_back(std::make_pair(r_cycle_node, l_cycle_node));
         
 
+        //now we have to find the common predecessor to close the cycle
         size_type common_predecessor;
+        std::cout << "Finding path\n";
+        size_type root_repr = dsu.find(current_root);
 
-        //Cycle until we found a node reached by both paths
+        //Iterate until we found a node reached by both paths
         while(true){
             size_type parent_r = dsu.find(parent[r_cycle_node]);
             size_type parent_l = dsu.find(parent[l_cycle_node]);
+            visited[r_cycle_node] = true; 
+            visited[l_cycle_node] = true;
             
-            std::cout << num_original_nodes << "\n";
-            if(!exposed_vertex(r_cycle_node)){
+
+            if(dsu.find(parent[r_cycle_node]) != r_cycle_node){
                 r_path.push_back(std::make_pair(actual_node_to_parent[r_cycle_node], parent[r_cycle_node]));
-                r_path_pseudonodes.push_back(std::make_pair(r_cycle_node, dsu.find(parent[r_cycle_node]))); 
-                std::cout << "Actual " << r_cycle_node << " " << actual_node_to_parent.size() << " " << actual_node_to_parent[r_cycle_node] << "\n";
+                r_path_pseudonodes.push_back(std::make_pair(r_cycle_node, parent_r)); 
+            
+                std::cout << "Actual right: " << r_cycle_node << "\n";
             }
-            if(!exposed_vertex(l_cycle_node)){
+
+            if(dsu.find(parent[l_cycle_node]) != l_cycle_node){
                 l_path.push_back(std::make_pair(actual_node_to_parent[l_cycle_node], parent[l_cycle_node]));
-                l_path_pseudonodes.push_back(std::make_pair(l_cycle_node, dsu.find(parent[l_cycle_node]))); 
-                std::cout << "Actual " << l_cycle_node << " " << actual_node_to_parent.size() << " " << actual_node_to_parent[l_cycle_node] << "\n";
+                l_path_pseudonodes.push_back(std::make_pair(l_cycle_node, parent_l)); 
+                std::cout << "Actual left: " << l_cycle_node << "\n";
             }
+
+            std::cout << r_cycle_node << " nodes " << l_cycle_node <<"\n";
             r_cycle_node = parent_r;
             l_cycle_node = parent_l;
 
+            std::cout << "parents " << r_cycle_node << " " << l_cycle_node <<"\n";
+
             //Found common node
-            if(visited[r_cycle_node] || visited[l_cycle_node] ||
-                r_cycle_node==l_cycle_node){
+            if((visited[r_cycle_node] && r_cycle_node != root_repr) || (visited[l_cycle_node] && l_cycle_node != root_repr)  ||
+                r_cycle_node == l_cycle_node){
 
 
-                visited[r_cycle_node] = true;
-                visited[l_cycle_node] = true;
 
 
                 size_type tmp_node = common_predecessor = r_cycle_node;
                 
-                if(visited[l_cycle_node]) tmp_node = common_predecessor = l_cycle_node;
+                if(visited[l_cycle_node] && l_cycle_node != root_repr) tmp_node = common_predecessor = l_cycle_node;
+                visited[r_cycle_node] = true;
+                visited[l_cycle_node] = true;
 
+                std::cout << "Common P is : " << common_predecessor <<"\n";
                 //Set as univisted nodes not in the cycle
-                while(visited[tmp_node] && tmp_node != parent[tmp_node]){
+                while(visited[tmp_node]){
+                    std::cout << tmp_node << " <-- not visited\n"; 
                     visited[tmp_node] = false;
                     tmp_node = dsu.find(parent[tmp_node]);
+                    std::cout << tmp_node << " <--- then\n";
                 }
 
-                visited[common_predecessor] = true;
+                 visited[common_predecessor] = true;
                  //Remove edges not contained in the cycle
                  //This gives a total time of O(|E(C)|) for the
                  //shrinking step
@@ -181,7 +196,8 @@ namespace ALG{
                  remove_not_contained_edges(r_path);
                  remove_not_contained_edges(l_path_pseudonodes);
                  remove_not_contained_edges(r_path_pseudonodes);
-                 
+                 //std::cout << l_path.size() << " "<< r_path.size() << "\n";
+                 assert(l_path.size() > 0); 
 
                  //ordering the edges in the cycle is just one
                  //of the paths reversed joined to the other
@@ -209,6 +225,10 @@ namespace ALG{
                     
                  }
                  edges_in_cycle.push_back(cycle);
+                 pseudonodes_edges.push_back(pseudonode_cycle);
+                 std::cout << "Cycle size: "  << cycle.size() << "\n";
+                 assert(cycle.size() > 2 );
+                 assert(pseudonode_cycle.size() > 2 );
                  break;
 
             }
@@ -241,7 +261,7 @@ namespace ALG{
     size_type Edmonds::get_next_node_to_match(size_type node, int incident_kind_of_edge){
     
         //if the node has to be matched, then this is the next node
-        if(incident_kind_of_edge == 1) 
+        if(incident_kind_of_edge != 1) 
             return node;
 
         size_type pseudonode = dsu.find(node);
@@ -256,18 +276,31 @@ namespace ALG{
     void Edmonds::augment_matching_on_cycle(size_type pseudonode, size_type ignored_node){
         int  root_edge_index= -1;
         int pseudo_index = pseudonode - num_original_nodes;
+        assert(pseudo_index >=0 );
+        //It's not a pseudonode
+        if(pseudo_index < 0)
+            return;
 
         if(augmented[pseudo_index])
             return;
-
+        std::cout << "Augment on cycle " << pseudo_index << " " << augmented.size() << " " << ignored_node<< "\n";;
+        size_type tmp = ignored_node;
+        while(belongs_to_pseudonode[tmp] != tmp){
+        std::cout << "Belongs to " << tmp<< " xxx  " << belongs_to_pseudonode[tmp] << " "<<"\n";
+            tmp = belongs_to_pseudonode[tmp];
+        }
         augmented[pseudo_index] = true;
+        std::cout << pseudonodes_edges[pseudo_index].size()  << "\n";
         int cycle_size = pseudonodes_edges[pseudo_index].size();
         //First we find the ignored node
         for(int i = 0 ; i < cycle_size && root_edge_index < 0; i++){
+                std::cout << pseudonodes_edges[pseudo_index][i].first << " <==> " << pseudonodes_edges[pseudo_index][i].second  << "\n";
            if(node_belongs_to_edge(pseudonodes_edges[pseudo_index][i], ignored_node)){
                 root_edge_index = i; 
            } 
         }
+        assert(root_edge_index >= 0);
+
         if(node_belongs_to_edge(pseudonodes_edges[pseudo_index][(root_edge_index + 1) % cycle_size], ignored_node)) 
             root_edge_index = (root_edge_index + 1) % cycle_size;
         int second_root_edge_index = root_edge_index - 1;
@@ -279,10 +312,10 @@ namespace ALG{
         //Then match the correct nodes
 
         while(current_edge_to_match != root_edge_index && current_edge_to_match != second_root_edge_index){
-            
+            //std::cout << current_edge_to_match << " " << root_edge_index << " " << second_root_edge_index << "\n";
             size_type node_u = edges_in_cycle[pseudo_index][current_edge_to_match].first; 
             size_type node_v = edges_in_cycle[pseudo_index][current_edge_to_match].second; 
-
+            
             match(node_u, node_v);
             match_all_pseudonodes_of(node_u, 1);
             match_all_pseudonodes_of(node_v, 1);
@@ -294,13 +327,14 @@ namespace ALG{
 
 
 
-
-
     void Edmonds::match_all_pseudonodes_of(size_type node, int next_kind_of_edge){
         size_type node_to_match = get_next_node_to_match(node, next_kind_of_edge);
         size_type last_pseudonode = dsu.find(node_to_match); 
-        size_type ignored_node = node;
-        while( ignored_node != last_pseudonode ){
+        if(augmented[last_pseudonode - num_original_nodes]) 
+            return;
+        size_type ignored_node = node_to_match;
+        std::cout << "Matching " << ignored_node << "\n";
+        while( ignored_node != last_pseudonode && !augmented[belongs_to_pseudonode[ignored_node] - num_original_nodes]){
             augment_matching_on_cycle(belongs_to_pseudonode[ignored_node], ignored_node);
             ignored_node = belongs_to_pseudonode[ignored_node];
         } 
@@ -314,21 +348,31 @@ namespace ALG{
         //it's 0 for an unmatched edge
         //and 1 for a matched edge
         int next_kind_of_edge = 1;
-        while(dsu.find(node) != root_pseudonode){
-
+        size_type current_pseudonode, last_pseudonode;
+        while((current_pseudonode = dsu.find(node)) != root_pseudonode){
+            //std::cout << node << " " << current_pseudonode << "\n";
             //The node is inside a cycle
-            if(node != dsu.find(node)) {
+            if(node != current_pseudonode) {
+                std::cout << "Va con " << node << " " << parent[current_pseudonode]<< "\n";
+                std::cout << "Cycle coming\n";
                 match_all_pseudonodes_of(node, next_kind_of_edge);        
+                if(!next_kind_of_edge){
+                    match(node, actual_node_to_parent[last_pseudonode]);
+
+                    //match(node, parent[node]);
+                }
             } else if(next_kind_of_edge){
-                matched_to[node] = parent[node];
-                matched_to[parent[node]] = node;
+                match(node, parent[node]);
             }
-            
+            last_pseudonode = current_pseudonode; 
             next_kind_of_edge = 1 - next_kind_of_edge;
-            node = parent[dsu.find(node)];
+            node = parent[current_pseudonode];
+        //    std::cout << "Cycle end " << node <<" " << parent[current_pseudonode] << " "<< parent[parent[current_pseudonode]]<<"\n";;
         }
         //augment matching on the cycle of the root
-        augment_matching_on_cycle(root_pseudonode, current_root);
+        std::cout << "Khe? \n";
+        //match_all_pseudonodes_of(current_root, 0);
+        //augment_matching_on_cycle(root_pseudonode, current_root);
     
     }
 
@@ -339,9 +383,9 @@ namespace ALG{
          //We add edges from odd nodes
          //Every node is actually two times, so we care that
          //we don't add unnecesary edges
-         for(size_type i =0 ; i < edges_in_cycle[last_cycle].size(); i++){
-             size_type node_a = edges_in_cycle[last_cycle][i].first;
-             size_type node_b = edges_in_cycle[last_cycle][i].second;
+         for(size_type i =0 ; i < pseudonodes_edges[last_cycle].size(); i++){
+             size_type node_a = pseudonodes_edges[last_cycle][i].first;
+             size_type node_b = pseudonodes_edges[last_cycle][i].second;
 
              if(visited[node_a] && odd_node[node_a]){
                  add_neighbors_to_pending_list(node_a);        
@@ -374,6 +418,7 @@ namespace ALG{
           
            size_type repr_x = dsu.find(node_x);
            size_type repr_y = dsu.find(node_y);
+           std::cout << node_x << " edge " << node_y << "\n";
 
            if(repr_x == repr_y) 
                 continue;
@@ -386,6 +431,7 @@ namespace ALG{
 
            //Condition 1: augment matching
            if(!on_tree[repr_y] && exposed_vertex(repr_y)){
+               std::cout << "Augment\n";
                augment_matching(node_y, node_x); 
                reset_vectors();
                return;
@@ -393,14 +439,17 @@ namespace ALG{
            }
            //Extend tree
            else if(!on_tree[repr_y] && !exposed_vertex(repr_y)){
+                std::cout << "Extend\n";
                 extend_tree(node_y, node_x);     
            }
            //Shrink
            else{
                 std::cout << "Shrinking\n";
+                std::cout << "Edge " << node_x << " " << node_y << "\n";
                 shrink(node_x, node_y);         
                 std::cout << "Out of shrinking\n";
                 add_neighbours_of_last_cycle_odd_nodes();
+                std::cout << "Out of shrinking #2\n";
            }
 
         } 
@@ -416,6 +465,7 @@ namespace ALG{
     }
     //Edmonds Algrotihm implementation
     void Edmonds::run(){
+       std::cout << "Initial matching\n"; print_matching();
        reset_vectors(); 
       
        for(size_type i =static_cast<size_type>(0) ; i < num_original_nodes; i++){
@@ -445,7 +495,8 @@ namespace ALG{
                 
             if(repr_neigh != repr_node && !frustrated[neighbour] && !frustrated[node]){
                 add_edge_to_pending_list(node, neighbour); 
-                on_tree[repr_neigh] = true;
+                //std::cout << "Added " << node << " and " << neighbour << "\n";
+                //on_tree[repr_neigh] = true;
             }
         }
     }

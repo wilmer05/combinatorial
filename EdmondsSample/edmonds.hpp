@@ -82,7 +82,6 @@ namespace ALG{ // for the implementation of Edmonds Algorithm
 
 
             //Do I need this? \/
-            std::vector<std::pair<int,int> > cycle_edge;
             std::vector<bool> visited;
             std::vector<std::vector<std::pair< size_type, size_type> > > edges_in_cycle, pseudonodes_edges; 
             std::vector<size_type> node_closes_cycle;
