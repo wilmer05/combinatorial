@@ -61,7 +61,13 @@ namespace ALG{
         dsu.clean(nodes_in_tree);
         nodes_in_tree.clear();
         node_closes_cycle.clear();
-        
+       
+        for(size_type i =0 ; i < graph.num_nodes(); i++) {
+            assert(parent[i] == i);
+            assert(!visited[i]);
+            assert(!odd_node[i]);
+            assert(!even_node[i]);
+        }
     }
 
     bool Edmonds::exposed_vertex(size_type node){
@@ -82,7 +88,11 @@ namespace ALG{
 
         parent[match] = node;
         parent[node] = even_parent;
-        std::cout << "Added " << node << " and " << match << "\n";
+        if(parent[match] != current_root)
+            assert(parent[match] != parent[parent[match]]);
+        if(parent[node] != current_root)
+            assert(parent[node] != parent[parent[node]]);
+        std::cout << "Added " << node << " and " << match <<" " << even_parent<< "\n";
 
         actual_node_to_parent[node] = node;
         actual_node_to_parent[match] = match;
@@ -146,19 +156,19 @@ namespace ALG{
             visited[r_cycle_node] = true; 
             visited[l_cycle_node] = true;
             
+                std::cout << "Actual right: " << r_cycle_node << " " << parent_r<< "\n";
 
             if(dsu.find(parent[r_cycle_node]) != r_cycle_node){
                 r_path.push_back(std::make_pair(actual_node_to_parent[r_cycle_node], parent[r_cycle_node]));
                 r_path_pseudonodes.push_back(std::make_pair(r_cycle_node, parent_r)); 
             
-                std::cout << "Actual right: " << r_cycle_node << "\n";
             }
 
             if(dsu.find(parent[l_cycle_node]) != l_cycle_node){
                 l_path.push_back(std::make_pair(actual_node_to_parent[l_cycle_node], parent[l_cycle_node]));
                 l_path_pseudonodes.push_back(std::make_pair(l_cycle_node, parent_l)); 
-                std::cout << "Actual left: " << l_cycle_node << "\n";
             }
+                std::cout << "Actual left: " << l_cycle_node << " " << parent_l << "\n";
 
             std::cout << r_cycle_node << " nodes " << l_cycle_node <<"\n";
             r_cycle_node = parent_r;
@@ -218,6 +228,7 @@ namespace ALG{
                  for(size_type i = 0 ; i < pseudonode_cycle.size(); i++) {
                     size_type parent_a = pseudonode_cycle[i].first;
                     size_type parent_b = pseudonode_cycle[i].second;
+                    std::cout << "Joining with " << parent_a << " "<< parent_b << " " << num_nodes << "\n";
 
                     belongs_to_pseudonode[parent_a] = belongs_to_pseudonode[parent_b] = num_nodes;
                     dsu.set_parent(parent_a, num_nodes);
@@ -244,7 +255,15 @@ namespace ALG{
         belongs_to_pseudonode.push_back(num_nodes);
         node_closes_cycle.push_back(common_predecessor);
 
-        parent.push_back(parent[common_predecessor]);
+
+        if(dsu.find(common_predecessor) == dsu.find(current_root))
+            parent.push_back(num_nodes);
+        else
+            parent.push_back(parent[common_predecessor]);
+        if(dsu.find(common_predecessor) != dsu.find(current_root)){
+            std::cout << dsu.find(current_root) << " current root pseudonode\n";    
+            assert(parent[common_predecessor] != parent[parent[common_predecessor]]);
+        }
         actual_node_to_parent.push_back(actual_node_to_parent[common_predecessor]);
         augmented.push_back(false);
 
@@ -307,6 +326,7 @@ namespace ALG{
         if(second_root_edge_index < 0) 
             second_root_edge_index = cycle_size - 1;
 
+        //assert( root_edge_index >  second_root_edge_index || !root_edge_index);
         int current_edge_to_match = (root_edge_index + 1) % cycle_size;
 
         //Then match the correct nodes
@@ -326,6 +346,19 @@ namespace ALG{
     }
 
 
+    bool Edmonds::check_parents(){
+
+        for(size_type i =0 ; i < parent.size(); i++){
+            if(parent[i] != i && parent[parent[i]] == i){
+                std::cout << i +1 << " tiene de padre a " << parent[i] + 1 <<"\n"; 
+                std::cout << parent[i] +1 << " tiene de padre a " << parent[parent[i]] + 1 <<"\n"; 
+                return false;
+            }
+        }
+
+        return true;
+    
+    }
 
     void Edmonds::match_all_pseudonodes_of(size_type node, int next_kind_of_edge){
         size_type node_to_match = get_next_node_to_match(node, next_kind_of_edge);
@@ -335,6 +368,7 @@ namespace ALG{
         size_type ignored_node = node_to_match;
         std::cout << "Matching " << ignored_node << "\n";
         while( ignored_node != last_pseudonode && !augmented[belongs_to_pseudonode[ignored_node] - num_original_nodes]){
+            std::cout << "We have to ignore " << ignored_node << " in " <<  belongs_to_pseudonode[ignored_node] << "\n";
             augment_matching_on_cycle(belongs_to_pseudonode[ignored_node], ignored_node);
             ignored_node = belongs_to_pseudonode[ignored_node];
         } 
@@ -342,6 +376,9 @@ namespace ALG{
 
     void Edmonds::augment_matching(size_type node, size_type par){
         parent[node] = par;
+        on_tree[node] = true;
+        nodes_in_tree.push_back(node);
+
         size_type root_pseudonode = dsu.find(current_root);
 
         //This variable indicates the next kind of edge
@@ -370,9 +407,13 @@ namespace ALG{
         //    std::cout << "Cycle end " << node <<" " << parent[current_pseudonode] << " "<< parent[parent[current_pseudonode]]<<"\n";;
         }
         //augment matching on the cycle of the root
-        std::cout << "Khe? \n";
+        std::cout << "Khe? \n" << current_root << "\n";;
         //match_all_pseudonodes_of(current_root, 0);
-        //augment_matching_on_cycle(root_pseudonode, current_root);
+        size_type tmp_pseudo_root_node = current_root;
+        while(tmp_pseudo_root_node != root_pseudonode){
+            augment_matching_on_cycle(belongs_to_pseudonode[tmp_pseudo_root_node], tmp_pseudo_root_node);
+            tmp_pseudo_root_node = belongs_to_pseudonode[tmp_pseudo_root_node];
+        }
     
     }
 
@@ -451,7 +492,7 @@ namespace ALG{
                 add_neighbours_of_last_cycle_odd_nodes();
                 std::cout << "Out of shrinking #2\n";
            }
-
+            assert(check_parents());
         } 
 
 
@@ -480,6 +521,7 @@ namespace ALG{
     
     //Function that matches node_u to node_v
     void Edmonds::match(size_type node_u, size_type node_v){
+          std:: cout << "match " << node_u  + 1<< "  to " << node_v + 1<< "\n";
           matched_to[node_u] = node_v;
           matched_to[node_v] = node_u;
     }

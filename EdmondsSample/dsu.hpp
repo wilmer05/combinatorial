@@ -1,6 +1,7 @@
 #ifndef DSU_HPP
 #define DSU_HPP
 #include<vector>
+#include <cassert>
 
 namespace DSU{
 
@@ -61,12 +62,12 @@ inline void Dsu::clean() {
     _parent.clear();
 
 }
-
 inline void Dsu::clean(std::vector<size_type> const &nodes){
     for(size_type i = 0 ; i < nodes.size(); i++){
         _parent[nodes[i]] = nodes[i];
     }
     _parent.resize(original_size);
+    for(size_type i =0 ; i < _parent.size(); i++) assert(_parent[i] == i);
 }
 
 inline size_type Dsu::num_nodes() const{

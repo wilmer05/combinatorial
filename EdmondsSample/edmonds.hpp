@@ -68,6 +68,8 @@ namespace ALG{ // for the implementation of Edmonds Algorithm
 
             void add_neighbours_of_last_cycle_odd_nodes();
 
+            bool check_parents();
+
         private:
             DSU::Dsu dsu;
             std::queue<std::pair<size_type, size_type> > pending_edges; 
