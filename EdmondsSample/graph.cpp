@@ -24,6 +24,12 @@ Graph::Graph(NodeId const num_nodes)
    _num_edges(0)
 {}
 
+Graph::~Graph()
+{
+    _nodes.clear();
+}
+
+
 void Graph::add_edge(NodeId node1_id, NodeId node2_id)
 {
    if (node1_id == node2_id)

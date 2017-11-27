@@ -38,6 +38,7 @@ namespace ALG{
             pending_edges.pop();
 
         on_tree.clear();
+        odd_node.clear();
         even_node.clear();
         parent.clear();
         actual_node_to_parent.clear();
@@ -47,7 +48,6 @@ namespace ALG{
         pseudonodes_edges.clear();
         nodes_in_tree.clear();
         frustrated.clear();
-        belongs_to_pseudonode.clear();
         belongs_to_pseudonode.clear();
         augmented.clear();
     }

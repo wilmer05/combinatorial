@@ -10,8 +10,8 @@ char input[max_string_size];
 ALG::Edmonds algorithm(0);
 
 int usage(){
-        std::cout << "Usage: ./main --graph file1.mdx [--hint file2.dmx]\n";
-        return EXIT_FAILURE; 
+        std::cout << "Usage: ./main --graph file1.mdx [--hint file2.dmx]\nThese files should exist.\n";
+        exit(EXIT_FAILURE); 
 }
 
 void read_file(char *file_name, ED::Graph &graph){
@@ -19,8 +19,13 @@ void read_file(char *file_name, ED::Graph &graph){
     file =fopen(file_name, "r");
     int m_edges;
     int n_vertices;
-    int u,v;
 
+    //Variables for nodes to read
+    int node_u,node_v;
+    
+    if(!file)
+        usage();
+    
     //Reading file while it is not the end of file
 
     while(fscanf(file, "%[^\n]\n", input) !=EOF){
@@ -37,11 +42,11 @@ void read_file(char *file_name, ED::Graph &graph){
 
         //Reading edge
         if(input[0] == 'e'){
-            sscanf(input, "e %d %d", &u, &v);      
+            sscanf(input, "e %d %d", &node_u, &node_v);      
 
             //Nodes are 0-indexed
-            u--; v--;
-            graph.add_edge(u,v);
+            node_u--; node_v--;
+            graph.add_edge(node_u,node_v);
         }
          
     }

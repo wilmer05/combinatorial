@@ -99,6 +99,7 @@ public:
       The number of nodes in the graph currently cannot be changed. You can only add edges between the existing nodes.
    **/
    Graph(NodeId const num_nodes);
+   ~Graph();
 
    /** @return The number of nodes in the graph. **/
    NodeId num_nodes() const;
