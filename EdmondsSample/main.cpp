@@ -64,19 +64,6 @@ void solve_edmonds(ED :: Graph &g, ED :: Graph &hint){
 
 
     /*
-        Here we find a maximal matching or extend the hint if possible
-    */
-    for(ALG::size_type node = 0 ; node < g.num_nodes(); node++){
-        for(ALG::size_type neighbour : g.node( node ).neighbors()){
-            if(algorithm.exposed_vertex(node) && algorithm.exposed_vertex(neighbour)){
-                algorithm.match(node, neighbour);
-                break;
-             }
-        } 
-    }
-
-
-    /*
         We run our algorithm and print the result
     */
     algorithm.run();

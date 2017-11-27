@@ -42,6 +42,12 @@ namespace ALG{ // for the implementation of Edmonds Algorithm
            void reset_vectors();
 
            /**
+                @brief Function that finds an initial matching which
+                is maximal
+           **/
+           void find_maximal_matching();
+
+           /**
                 @brief Given an exposed node, this functions sets 
                 the node as the current root in the alternating tree 
                 and starts the algorithm. This funtion calls the
@@ -205,6 +211,18 @@ namespace ALG{ // for the implementation of Edmonds Algorithm
             void add_incident_edges_of_last_cycle_odd_nodes();
 
 
+            /**
+                @brief Adds a new pseudonode to the tree and
+                updates every vector
+            **/
+            void add_new_pseudonode(size_type predecessor, size_type pseudonode_number);
+
+            /**
+                @brief Join partition sets in a cycle (newpseudonode)
+            **/
+            void join_partition_sets(std::vector<std::pair<size_type, size_type> > &cycle, size_type pseudonode_id);
+
+            
             /**
                 @brief variable corresponding to the graph given
                 as input

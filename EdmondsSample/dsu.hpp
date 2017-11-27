@@ -23,31 +23,57 @@ namespace DSU{
             /** @brief Creates a tree with a fixed number of nodes**/
             Dsu(size_type const size);
 
-            /** @brief adds a node to the current tree. This function is used when we create new nodes due to odd cycles **/
+            /** 
+                @brief adds a node to the current tree. 
+                This function is used when we create new nodes 
+                due to odd cycles 
+            **/
             void add_node();
 
-            /** @brief adds a node to the current tree with a fiex parent**/
+            /** 
+                @brief adds a node to the current tree with a fiex 
+                parent
+            **/
             void add_node(size_type parent);
 
-            /** @brief Clean the current tree, leaving an empty tree **/
+            /** 
+                @brief Clean the current tree, leaving an 
+                empty tree 
+            **/
             void clean();
 
-            /** @brief Clean the current tree, leaving the same tree or the original size (before the added composed nodes) and reset the parents of the nodes in the vector*/
+            /** @brief Clean the current tree, leaving the same 
+            tree or the original size (before the added composed 
+            nodes) and reset the parents of the nodes in the vector*/
             void clean(std::vector<size_type> const &nodes);
-            /** @brief Finds the root of the tree where the node belongs to**/
+
+            /** 
+                @brief Finds the root of the tree where node 
+                belongs to. It means the representative
+            **/
             size_type find(size_type node);
 
 
-            /** @brief Join the trees where the node_u and node_v belong**/
+            /** 
+                @brief Join the trees where the node_u and 
+                node_v belong
+            **/
             void join(size_type node_u, size_type node_v);
 
-            /** @brief Returns the number of nodes in the current tree **/
+            /** 
+                @brief Returns the number of nodes in the 
+                current tree 
+            **/
             size_type num_nodes() const;
             
             /** @brief Returns true if node_u and node_v are in the same tree**/ 
             bool have_same_tree(size_type node_u, size_type node_v);
 
-            /** @brief Sets the root of the tree where node_v belongs as the parent of the root of the tree where node_u belongs**/
+            /** 
+                @brief Sets the root of the tree where node_v 
+                belongs as the parent of the root of the tree 
+                where node_u belongs
+            **/
             void set_parent(size_type node_u, size_type node_v);
 
         private:
