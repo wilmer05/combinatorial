@@ -391,8 +391,8 @@ namespace ALG{
         //First we find the right most edge where the ignored node
         //belongs to
         //Idex of the first edge containing the ignored node
-        int  root_edge_index= -1;
-        for(int i = 0 ; i < cycle_size && root_edge_index < 0; i++){
+        long  root_edge_index= -1;
+        for(long  i = 0 ; i < cycle_size && root_edge_index < 0; i++){
            if(node_belongs_to_edge(pseudonodes_edges[pseudo_index][i], ignored_node)){
                 root_edge_index = i; 
            } 
@@ -473,7 +473,11 @@ namespace ALG{
 
         size_type current_pseudonode, last_pseudonode;
         while((current_pseudonode = dsu.find(node)) != root_pseudonode){
-            //The node is inside a cycle
+            //If the node is inside a cycle
+            //then we have to recurse and try to find
+            //a perfect matching in every pseudonode where
+            //it is, and match it if the kind of edge 
+            //that must go to the parent is non-matched
             if(node != current_pseudonode) {
                 match_all_pseudonodes_of(node, next_kind_of_edge);        
                 if(!next_kind_of_edge){
@@ -486,6 +490,9 @@ namespace ALG{
                     match_all_pseudonodes_of(parent[current_pseudonode], 0);
                     match_all_pseudonodes_of(actual_node_to_parent[current_pseudonode], 0);
                 }
+
+            //Else the node is not inside a pseudonode
+            //So we could match it to the last node or to its parent
             } else if(next_kind_of_edge){
                 match(node, parent[node]);
                 match_all_pseudonodes_of(parent[node], 0);
@@ -493,6 +500,9 @@ namespace ALG{
                 match(actual_node_to_parent[last_pseudonode], node);
                 match_all_pseudonodes_of(actual_node_to_parent[last_pseudonode], 0);
             }
+
+
+
             last_pseudonode = current_pseudonode; 
             next_kind_of_edge = 1 - next_kind_of_edge;
             node = parent[current_pseudonode];
@@ -502,6 +512,7 @@ namespace ALG{
         match_all_pseudonodes_of(parent[last_pseudonode], 0);
             
     }
+
 
     void Edmonds::add_incident_edges_of_last_cycle_odd_nodes(){
          size_type last_cycle = edges_in_cycle.size() - 1;
@@ -529,13 +540,15 @@ namespace ALG{
 
     }
 
+
     void Edmonds::grow_tree(size_type root_node){
         on_tree[root_node] = true;
         add_incident_edges_to_pending_list(root_node);
         even_node[root_node] = true;
         nodes_in_tree.push_back(root_node);
 
-
+        //While there are some edges that have not been considered yet
+        //we stay in this while
         while(pending_edges.size()){
            std::pair<size_type, size_type> edge = pending_edges.front();
            pending_edges.pop();
@@ -543,12 +556,18 @@ namespace ALG{
            size_type node_x = edge.first;
            size_type node_y = edge.second;
           
+           //We find the representatives of the endpoints of the edge
            size_type repr_x = dsu.find(node_x);
            size_type repr_y = dsu.find(node_y);
 
+           //If they belong to the same pseudonode then we don't do
+           //anything
            if(repr_x == repr_y) 
                 continue;
 
+           //If the edge is not going from a even node to
+           //an exposed vertex or to other even node
+           //we continue
            if(!even_node[repr_x] || odd_node[repr_y]){
                 std::swap(repr_x, repr_y);
                 if( !even_node[repr_x] || odd_node[repr_y]) 
@@ -566,22 +585,21 @@ namespace ALG{
            else if(!on_tree[repr_y] && !exposed_vertex(node_y)){
                 extend_tree(node_y, node_x);     
            }
-           //Shrink
+           //Shrink since the edge is between two even nodes
            else{
                 shrink(node_x, node_y);         
                 add_incident_edges_of_last_cycle_odd_nodes();
            }
-            //assert(check_parents());
         } 
 
 
-       //Frustrated tree, mark nodes as frustrated       
+        //We didn't find an exposed vertex fo the tree is Frustrated
+        //we mark nodes the nodes in the current treeas frustrated
         for(size_type i = 0 ; i < nodes_in_tree.size(); i++)  {
             if(nodes_in_tree[i] < num_original_nodes)
                 frustrated[nodes_in_tree[i]] = true;
         }
         reset_vectors();
-
     }
     //Edmonds Algrotihm implementation
     void Edmonds::run(){
@@ -617,7 +635,6 @@ namespace ALG{
                 
             if(repr_neigh != repr_node && !frustrated[neighbour] && !frustrated[node]){
                 add_edge_to_pending_list(node, neighbour); 
-                //on_tree[repr_neigh] = true;
             }
         }
     }
