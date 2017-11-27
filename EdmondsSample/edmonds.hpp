@@ -4,6 +4,7 @@
 #include "graph.hpp"
 #include "dsu.hpp" 
 #include <queue>
+#include <algorithm>
 
 /**
     @file edmonds.hpp
