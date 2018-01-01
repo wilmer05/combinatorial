@@ -2,13 +2,14 @@
 
 #include <ostream>
 #include <stdexcept>
+#include <cmath>
 
 namespace ED
 {
 /////////////////////////////////////////////
 //! \c Node definitions
 /////////////////////////////////////////////
-void Node::set_coordinates(float new_x, float new_y) {
+void Node::set_coordinates(double new_x, double new_y) {
      x = new_x;
      y = new_y;
 }
@@ -54,10 +55,20 @@ void Graph::add_edge(NodeId node1_id, NodeId node2_id)
    ++_num_edges;
 }
 
-void Graph::set_coordinates(size_type node, float new_x, float new_y){
+void Graph::set_coordinates(size_type node, double new_x, double new_y){
     _nodes[node].set_coordinates(new_x, new_y);
 }
 
+int Graph::distance(double x1, double y1, double x2, double y2)
+{
+    return std::lround(std::sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)));
+}
+
+int Graph::get_distance(size_type node_u, size_type node_v){
+
+    return distance(_nodes[node_u].x, _nodes[node_u].y, _nodes[node_v].x, _nodes[node_v].y);
+
+}
 
 std::ostream & operator<<(std::ostream & str, Graph const & graph)
 {

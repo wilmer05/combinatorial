@@ -51,7 +51,7 @@ void read_file(char *file_name, ED::Graph &graph){
     if(!file)
         usage();
     int n_vertices, node;
-    float coord_x, coord_y;
+    double coord_x, coord_y;
     
     //Reading file while it is not the end of file
     bool dimension_readed = false;
@@ -66,7 +66,7 @@ void read_file(char *file_name, ED::Graph &graph){
             break;
         //Getting the size of the graph
         if(node_coord_readed){
-            sscanf(input, "%d %f %f", &node, &coord_x, &coord_y); 
+            sscanf(input, "%d %lf %lf", &node, &coord_x, &coord_y); 
             node--;
             graph.set_coordinates(node, coord_x, coord_y);
         }

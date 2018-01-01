@@ -61,7 +61,7 @@ public:
    std::vector<NodeId> const & neighbors() const;
 
     
-   void set_coordinates(float new_x, float new_y); 
+   void set_coordinates(double new_x, double new_y); 
 
 private:
    friend class Graph;
@@ -76,7 +76,7 @@ private:
 
    std::vector<NodeId> _neighbors;
 
-   float x,y;
+   double x,y;
 }; // class Node
 
 /**
@@ -135,7 +135,17 @@ public:
    /**
       @brief set the coordinates for each node
    **/
-   void set_coordinates(size_type node, float new_x,  float new_y);
+   void set_coordinates(size_type node, double new_x,  double new_y);
+
+   /**
+    @brief Computes the distance between two points
+   **/
+   int distance(double x1, double y1, double x2, double y2);
+
+   /**
+    @brief Computes the distance between two nodes
+   **/
+   int get_distance(size_type node_u, size_type node_v);
 
    /**
      @brief Prints the graph to the given ostream in DIMACS format.
