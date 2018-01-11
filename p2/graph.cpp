@@ -1,6 +1,7 @@
 #include "graph.hpp" // always include corresponding header first
 
 #include <ostream>
+#include<iostream>
 #include <stdexcept>
 #include <cmath>
 #include <algorithm>
@@ -55,9 +56,12 @@ Edge::Edge (Node u, Node v, int d) : node_u(u), node_v(v), dist(d)
 
 void Graph :: generate_edges(){
     size_type num_nodes = _nodes.size();
-    for(size_type i=0 ; i < num_nodes;  i++)
-        for(size_type j =0 ; j < i; j++)
+    for(size_type i=0 ; i < num_nodes;  i++){
+        _nodes[i].set_id(i);
+        for(size_type j =0 ; j < i; j++){
             add_edge(j, i);
+        }
+    }
 }
 
 void Graph :: reset_edges() {
@@ -66,10 +70,14 @@ void Graph :: reset_edges() {
 
 void Graph::fix_forbidden_edges(std::vector<std::pair<size_type, size_type > > &F, std::vector<std::vector<size_type> > &R){
      
+    //We change the cost to infinity of every edge in the 
+    //list F
     for(size_type i =0 ; i < F.size(); i++){
         _edges[get_edge_index(F[i].first, F[i].second)].dist = 1e9;
     }
 
+    //If there is a node with 2 required edges
+    //then we forbid every other edge
     for(size_type i =0 ; i < R.size(); i++){
         assert(R[i].size() <= 2);
         if(R[i].size() == 2){

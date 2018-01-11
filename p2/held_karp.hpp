@@ -21,10 +21,16 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
     class SearchNode{
         public:
+
+            //
+            // Constructors
+            //
             SearchNode() = default;
 
-            SearchNode(size_type num_nodes) : lambda(std::vector<double> ( num_nodes, 0.0)), root_node(false){}
+            SearchNode(size_type num_nodes) : root_node(false), lambda(std::vector<double> ( num_nodes, 0.0)){}
 
+
+            //Getters
             std::vector<std::vector<size_type> > &get_R(){
                 return R;
             }
@@ -38,33 +44,59 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                 return lambda;
             }
 
+            //Setters
             void set_lambda(std::vector<double> l){
                 lambda = l;
             }
 
+
+            /**
+                @brief Function that indicates if a node is root
+            **/
             bool is_root_node(){
                 return root_node;
             }
 
-            void compute_children();
-
+            /**
+                @brief Function that computes if the last solution is
+                2-regular or not
+            **/
             bool solution_is_2_regular();
 
-
+            /**
+                @brief redefining operator to sort nodes in the 
+                priority queue
+            **/
             bool operator<(const SearchNode &other) const {
                 return last_total_cost > other.last_total_cost;
             }
 
+            /**
+                @brief Function that computes the children
+                of a search node, based on the required and forbidden
+                edges, and adding to them an edge, or a pair of them
+            **/
             std::vector<SearchNode> get_children();
 
+            //Last two 1-trees found with the required and forbidden
+            //Edges of this node
             std::vector<std::vector<size_type> > last_1_tree, last_second_1_tree;
+
+            //Cost of the last solution found
             double last_total_cost;
-            std::vector<SearchNode> children;
-        private:
-            std::vector<double> lambda;
+
+            bool root_node;
+
+            /**
+                lists of required and forbidden edges
+            **/
             std::vector<std::pair<size_type, size_type> > F;
             std::vector<std::vector<size_type> > R;
-            bool root_node;
+        private:
+            /**
+                lambda computed for this node so far
+            **/
+            std::vector<double> lambda;
     };
 
     /**
@@ -74,11 +106,23 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
     **/
     class HeldKarp{
         private:
+            //Graph of the problem
             ED :: Graph graph;
+
+            //File to write or stdout
             FILE *out;
+
+            //Variable for the cost of the best solution found so far
             double U;
+
+            //Best solution found so far
             std::vector<std::vector<size_type> > best_solution;
+
+            //Lambda computed in the root
             std::vector<double> lambda_root;
+
+            //Sum to initialize the t0 on nodes that are not the 
+            //root
             double sum_lambda_root;
 
         public:
@@ -98,8 +142,16 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             **/
             void output_ans();
 
+
+            /**
+                @brief computes the min weight 1-tree based on 
+                the required and forbidden edges
+            **/
             void compute_1_tree(SearchNode &node);
 
+            /**
+                @brief we update the lambda function of the current node based on the time step and the ti of the current step
+            **/
             void update_lambda_function(SearchNode &node, double tstep, size_type step);
 
     };
