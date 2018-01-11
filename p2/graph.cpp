@@ -3,9 +3,16 @@
 #include <ostream>
 #include <stdexcept>
 #include <cmath>
+#include <algorithm>
+#include <cassert>
+#include "dsu.hpp"
 
 namespace ED
 {
+void Node::set_lambda(double l){
+    lambda = l;
+} 
+
 /////////////////////////////////////////////
 //! \c Node definitions
 /////////////////////////////////////////////
@@ -23,6 +30,15 @@ void Node::add_neighbor(NodeId const id)
 //! \c Graph definitions
 /////////////////////////////////////////////
 
+Edge & Graph :: get_edge(size_type idx){
+    return _edges[idx];
+}
+
+Edge & Graph :: get_backup_edge(size_type u, size_type v){
+    return _backup_edges[get_edge_index(u,v)];
+
+}
+
 Graph::Graph(NodeId const num_nodes)
    :
    _nodes(num_nodes),
@@ -34,6 +50,44 @@ Graph::~Graph()
     _nodes.clear();
 }
 
+Edge::Edge (Node u, Node v, int d) : node_u(u), node_v(v), dist(d)
+{}
+
+void Graph :: generate_edges(){
+    size_type num_nodes = _nodes.size();
+    for(size_type i=0 ; i < num_nodes;  i++)
+        for(size_type j =0 ; j < i; j++)
+            add_edge(j, i);
+}
+
+void Graph :: reset_edges() {
+    _edges = _backup_edges;
+} 
+
+void Graph::fix_forbidden_edges(std::vector<std::pair<size_type, size_type > > &F, std::vector<std::vector<size_type> > &R){
+     
+    for(size_type i =0 ; i < F.size(); i++){
+        _edges[get_edge_index(F[i].first, F[i].second)].dist = 1e9;
+    }
+
+    for(size_type i =0 ; i < R.size(); i++){
+        assert(R[i].size() <= 2);
+        if(R[i].size() == 2){
+            for(size_type j = 0; j < i; j++)
+                if(R[i][0] != j && R[i][1] != j)
+                    _edges[get_edge_index(i, j)].dist = 1e9;
+                    
+        }
+    }
+}
+
+void Graph::fix_lambdas_and_sort_edges(std::vector<double> &lambdas){
+    
+    for(size_type i =0 ; i < lambdas.size(); i++)
+        _nodes[i].set_lambda(lambdas[i]);
+    
+    sort(_edges.begin(), _edges.end()); 
+}
 
 void Graph::add_edge(NodeId node1_id, NodeId node2_id)
 {
@@ -52,7 +106,8 @@ void Graph::add_edge(NodeId node1_id, NodeId node2_id)
    impl(node1_id, node2_id);
    impl(node2_id, node1_id);
 
-   ++_num_edges;
+   _num_edges+=2;
+   _backup_edges.push_back(ED :: Edge(_nodes[node1_id], _nodes[node2_id], get_distance(node1_id, node2_id)));
 }
 
 void Graph::set_coordinates(size_type node, double new_x, double new_y){

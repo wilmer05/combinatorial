@@ -11,6 +11,7 @@
 #include <iosfwd> // std::ostream fwd declare
 #include <limits>
 #include <vector>
+#include <algorithm>
 
 namespace ED // for Edmonds
 {
@@ -63,6 +64,20 @@ public:
     
    void set_coordinates(double new_x, double new_y); 
 
+   void set_id(size_type id){
+        this -> id = id;
+   }
+
+   size_type get_id(){
+        return id;
+   }
+
+   void set_lambda(double l);
+
+   double get_lambda() const{
+        return lambda;
+   }
+
 private:
    friend class Graph;
 
@@ -77,7 +92,59 @@ private:
    std::vector<NodeId> _neighbors;
 
    double x,y;
+   double lambda;
+   size_type id;
 }; // class Node
+
+
+
+/**
+   @class Edge
+
+   @brief A class joining two nodes
+
+   @note The neighbors are not necessarily ordered, so searching for a specific neighbor takes O(degree)-time.
+**/
+class Edge
+{
+    public:
+
+        Edge() = default;
+
+        /**
+            Constructor to build an edge
+        **/
+        Edge(Node  node_u, Node  node_v, int d);
+
+        Edge(const Edge &e) : node_u(e.node_u), node_v(e.node_v), dist(e.dist){
+        
+        }
+
+        /**
+            Redefining < operator to sort the edges only once
+        **/
+        bool operator<(const Edge &ot) const{
+            return dist + node_u.get_lambda() + node_v.get_lambda() < ot.dist + ot.node_u.get_lambda() + ot.node_v.get_lambda();
+        }
+        
+        Node & get_first(){
+            return node_u;
+        }
+
+        Node &get_second(){
+            return node_v;
+        }
+
+        double get_dist() {
+            return dist;
+        }
+
+    private:
+        friend class Graph;
+        Node node_u;
+        Node node_v;
+        double dist;
+};
 
 /**
    @class Graph
@@ -148,6 +215,38 @@ public:
    int get_distance(size_type node_u, size_type node_v);
 
    /**
+   @brief Sort the edges of a graph by cost
+   **/
+   void fix_lambdas_and_sort_edges( std::vector<double> &lambdas);
+
+   /**
+   @brief Generates every edge in the graph
+   **/
+   void generate_edges();
+
+    /**
+    @brief fix forbidden edges
+    **/
+    void fix_forbidden_edges(std::vector<std::pair<size_type,size_type > > &F, std::vector<std::vector<size_type> > &R);
+
+
+
+    /**
+    @brief resets the _edges vector to _backup_edges
+    **/
+    void reset_edges();
+
+    Edge &get_edge(size_type idx);
+
+    Edge &get_backup_edge(size_type u, size_type v);
+
+    std::vector<Edge> &get_edges() {
+        return _edges;
+    }
+
+   inline size_type get_edge_index(size_type node_u, size_type node_v)const ;
+
+   /**
      @brief Prints the graph to the given ostream in DIMACS format.
    **/
    friend std::ostream & operator<<(std::ostream & str, Graph const & graph);
@@ -155,6 +254,8 @@ public:
 private:
    std::vector<Node> _nodes;
    std::size_t _num_edges;
+   std::vector<Edge> _edges, _backup_edges;
+
 }; // class Graph
 
 //BEGIN: Inline section
@@ -171,6 +272,13 @@ std::vector<NodeId> const & Node::neighbors() const
    return _neighbors;
 }
 
+inline 
+size_type Graph::get_edge_index(size_type node_u, size_type node_v) const {
+    if( node_u > node_v )
+        std::swap(node_u,node_v);
+    
+    return (((node_v-1) * (node_v)) >> 1) + node_u;
+}
 inline
 NodeId Graph::num_nodes() const
 {

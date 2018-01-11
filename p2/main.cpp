@@ -89,7 +89,7 @@ void solve(ED :: Graph &g, FILE *output){
     /*
         We run our algorithm and print the result
     */
-    algorithm.run();
+    algorithm.branch_and_bound();
 }
 
 int main(int argc, char**argv)
