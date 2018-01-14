@@ -171,7 +171,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             /**
                 @brief we update the lambda function of the current node based on the time step and the ti of the current step
             **/
-            void update_lambda_function(SearchNode &node, double tstep, size_type step);
+            void update_lambda_function(SearchNode &node, double tstep);
 
     };
 

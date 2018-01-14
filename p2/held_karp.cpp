@@ -80,7 +80,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         //then we have to select depending on the number of
         //smallest number of feasible incident edges
         //(Heuristic 2 in the paper)
-        for(size_type i = 0 ; i < lambda.size(); i++){
+        for(size_type i = 0 ; i < lambda.size() && node_p >= lambda.size(); i++){
 
             /*we check if we can put an edge as required
             for(size_type j = 0 ; j < last_1_tree[i].size(); j++)
@@ -89,7 +89,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             */
             if(last_1_tree[i].size() > 2){
 
-                if(R[i].size() < 2 && (max_counter_node > lambda.size()  || counter[i] > counter[max_counter_node]))
+                if(!R[i].size() && (max_counter_node >= lambda.size()  || counter[i] > counter[max_counter_node]))
                     max_counter_node = i;
 
                 if(R[i].size() == 1){
@@ -101,10 +101,12 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         }
 
         if(!node_with_required){
+            //Second heuristic
+            //node with least feaseble incident edges
             node_p = max_counter_node;
         }
 
-       if(node_p > lambda.size())
+       if(node_p >= lambda.size())
             return children;
 
        for(size_type j =0 ; j < last_1_tree[node_p].size() && !children.size(); j++){
@@ -147,11 +149,11 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             
         
 
-        if(children.size() <2 || children.size() >=4){
+        /*if(children.size() < 2 || children.size() >=4){
             std::cout << node_p << "\n";
             print();
             std::cout << children.size() << "\n";
-        }
+        }*/
         assert(children.size() >= 2 && children.size() < 4);
         return children;
     }
@@ -212,7 +214,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                 deltai = delta0;
                 tstep = t0;
             }
-            update_lambda_function(node, tstep, step);
+            update_lambda_function(node, tstep);
             tstep -= deltai;
             deltai -= delta_delta;
         }
@@ -227,33 +229,24 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
     }
 
-    void HeldKarp :: update_lambda_function(SearchNode &node, double tstep, size_type step) {
+    void HeldKarp :: update_lambda_function(SearchNode &node, double tstep) {
 
         //Update lambda function based on the nodes degrees and the t's
         std::vector<double> &lambda = node.get_lambda();
-//        std::cout << tstep << "\n";
-//        std::cout << "Lambda before\n";
 
-//        for(size_type i =0 ; i < lambda.size(); i++)
-//            std::cout << lambda[i] << "\n";
         for(size_type i =0 ; i < lambda.size(); i++){
              lambda[i] += tstep * d_parameter * (1.0 * node.last_1_tree[i].size() - 2.0);
 
              //In the first step there is not a Tree from the 
              //-1 iteration
-             if(step) lambda[i] += tstep * ((1 - d_parameter) * 1.0 * node.last_second_1_tree[i].size() - 2.0);
+             lambda[i] += tstep * ((1 - d_parameter) * 1.0 * node.last_second_1_tree[i].size() - 2.0);
         } 
     
-//        for(size_type i =0 ; i < lambda.size(); i++)
-//            std::cout << lambda[i] << "\n";
     }
 
 
     void HeldKarp :: output_ans() {
     
-       fprintf(out, "TYPE : TOUR\n");  
-       fprintf(out, "DIMENSION : %lu\n", graph.num_nodes());  
-       fprintf(out, "TOUR_SECTION\n");  
 
        //The solution should be a 2-regular graph
        for(size_type i =0 ; i < best_solution.size(); i++){
@@ -270,9 +263,15 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
        //We run through the 2-regular graph until we get
        //back to the first node
-       fprintf(out, "%lu\n", 1UL);
+       if(stdout != out){
+            fprintf(out, "TYPE : TOUR\n");  
+            fprintf(out, "DIMENSION : %lu\n", graph.num_nodes());  
+            fprintf(out, "TOUR_SECTION\n");  
+            fprintf(out, "%lu\n", 1UL);
+       }
        while(current!=0){
-            fprintf(out,"%lu\n", current + 1);
+            if(stdout != out)
+                fprintf(out,"%lu\n", current + 1);
             size_type tmp = last;
             last = current;
             if(best_solution[current][0] == tmp)
@@ -283,8 +282,10 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
        }
         
 
-       fprintf(out,"-1\nEOF");
-       fprintf(out, "\ncost: %lf", sol);
+       if(stdout != out){
+            fprintf(out,"-1\nEOF");
+       }
+       std::cout << sol << "\n";
     }
 
     void HeldKarp :: compute_1_tree(SearchNode &node){
@@ -354,6 +355,10 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         for(size_type i =0 ; i < lambda.size();i++){
             node.last_total_cost += lambda[i] * (node.last_1_tree[i].size() - 2.0);
         }
+
+        if(!node.last_second_1_tree.size())
+            node.last_second_1_tree = node.last_1_tree;
+
         node.num_joins = joins;
     }
 
