@@ -266,6 +266,8 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
        last = 0;
        current = best_solution[0][0];
 
+       double sol = graph.get_distance(last, current);
+
        //We run through the 2-regular graph until we get
        //back to the first node
        fprintf(out, "%lu\n", 1UL);
@@ -276,10 +278,13 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             if(best_solution[current][0] == tmp)
                 current = best_solution[current][1];
             else current = best_solution[current][0];
+
+            sol += graph.get_distance(last, current);
        }
         
 
        fprintf(out,"-1\nEOF");
+       fprintf(out, "\ncost: %lf", sol);
     }
 
     void HeldKarp :: compute_1_tree(SearchNode &node){
@@ -359,7 +364,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         graph.generate_edges();
 
         //Best bound heuristic
-        std::queue<SearchNode> q;
+        std::priority_queue<SearchNode> q;
         SearchNode root = SearchNode(graph.num_nodes());
         root.root_node = true;
         root.invalid_node = false;
@@ -367,7 +372,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
         //While there is a node in the search space
         while(!q.empty()){
-            SearchNode node = q.front();
+            SearchNode node = q.top();
             q.pop();
 
             //We run HeldKarp algorithm
@@ -375,7 +380,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
             //If the tree found has a worse cost than the best
             //found so far then we discard the node
-            if(node.last_total_cost >= U || node.invalid_node)
+            if((1.0-1e-6) * node.last_total_cost >= U || node.invalid_node)
                 continue;
 
             

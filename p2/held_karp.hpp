@@ -59,7 +59,8 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             }
 
             /**
-                @brief Function that computes if the last solution is
+                @brief Checks that the graph is connected
+                and computes if the last solution is
                 2-regular or not
             **/
             bool solution_is_2_regular();
