@@ -9,6 +9,31 @@
 #include"held_karp.hpp"
 namespace ALGORITHM{ //Start of namespace ALGORITHM
 
+    void SearchNode :: print(){
+        std::cout << "Req -> \n";
+        for(size_type i =0 ; i < R.size(); i++) {
+            for(size_type j =0 ; j < R[i].size();j++){
+                std::cout << i << " " << R[i][j] << "\n";
+            }
+        }
+
+        std::cout << "########\n F -> \n";
+        for(size_type i = 0 ; i < F.size();i++)
+            std::cout << F[i].first << " " << F[i].second <<"\n";
+        std::cout << "--------------------" << std::endl;
+        std::cout.flush();
+
+
+    }
+
+    bool SearchNode :: can_require(std::vector<std::vector<size_type> > &R, size_type node_u, size_type node_v){
+        return !std::count(R[node_u].begin(), R[node_u].end(), node_v) && R[node_v].size() < 2 && R[node_u].size() < 2;
+    }
+
+    bool SearchNode :: not_required(std::vector<size_type> &R, size_type node_v){
+        return !std::count(R.begin(), R.end(), node_v);
+    }
+
     bool SearchNode :: solution_is_2_regular(){
     
         bool regular_2 = true;
@@ -16,75 +41,95 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             regular_2 = regular_2 && last_1_tree[i].size() == 2;
         } 
 
-        return regular_2;
+        return regular_2 && last_1_tree.size();
     }
 
     std::vector<SearchNode> SearchNode::get_children(){
 
-        std::vector<std::vector<size_type> > adj_tree(lambda.size());
         std::vector<SearchNode> children;
 
-
+        //If we cannot get a proper tree with the forbidden edges
+        //Then we return
+        if(invalid_node)
+            return children;
         //Tmp variable to generate every child
         SearchNode child;
         child.R = R;
         child.F = F;
         child.lambda = lambda;
+        child.invalid_node = false;
 
-        for(size_type i =0 ; i < lambda.size(); i++){
-            if(last_1_tree[i].size() > 2){
-                for(size_type j =0 ; j < last_1_tree[i].size(); j++){
+        bool node_with_required = false;
 
-                    size_type adj_node = last_1_tree[i][j];
-                    
-                    //We forbid the edge from i to adj_node
-                    if( i < adj_node){
-                        child.F.push_back(std::make_pair(i, adj_node));
-                        //Add the child to the list of children
-                        children.push_back(child);
-                        child.F.pop_back();
-                    }
-
-                    //If we can add a required edge incident to i and
-                    //the adj_node
-                    if(R[i].size() < 2 && child.R[adj_node].size() < 2){
-
-                        //We required the edge
-                        child.R[i].push_back(adj_node);
-                        child.R[adj_node].push_back(i);
-
-                        for(size_type k = 0; k < last_1_tree[i].size(); k++){
-                            //We look for other one incident to i to
-                            //forbid
-                            if(j == k) continue;
-                            size_type forb_node = last_1_tree[i][k];
-
-                            //Forbid the edge
-                            child.F.push_back(std::make_pair(i,forb_node));
-                            //then we add the child to the list
-                            children.push_back(child);
-                            child.F.pop_back();
-
-                            //Then we see if we can required both edges
-                            //treated before in other child
-                            if(!R[i].size() && child.R[forb_node].size() < 2 && k > j){
-                                child.R[i].push_back(forb_node);
-                                child.R[forb_node].push_back(i);
-                                children.push_back(child);
-
-                                child.R[i].pop_back();
-                                child.R[forb_node].pop_back();
-                                
-                            }
-                        }
-                        child.R[i].pop_back();
-                        child.R[adj_node].pop_back();
-                    }
-                } 
-            }        
+        //p node of the paper
+        size_type node_p;
+        size_type max_counter_node = 0;
+        std::vector<size_type> counter(lambda.size(), 0);
+        for(size_type i = 0; i < F.size(); i ++){
+            counter[F[i].first]++;
+            counter[F[i].second]++;
         }
-        
 
+        //In case there is no node p incident to a required edge
+        //then we have to select depending on the number of
+        //smallest number of feasible incident edges
+        //(Heuristic 2 in the paper)
+        for(size_type i = 0 ; i < lambda.size(); i++){
+
+            if(last_1_tree[i].size() > 2){
+                if(R[i].size() < 2 && counter[i] > counter[max_counter_node])
+                    max_counter_node = i;
+
+                if(R[i].size() == 1){
+                    node_with_required = true;
+                    node_p = i;
+                    break;
+                }
+            }
+        }
+
+        if(!node_with_required)
+            node_p = max_counter_node;
+
+       for(size_type j =0 ; j < last_1_tree[node_p].size() && !children.size(); j++){
+
+           size_type adj_node = last_1_tree[node_p][j];
+           if(!can_require(R, node_p, adj_node))
+               continue;
+           
+           //Child S3 in the paper, choosing 
+           //e1 = {node_p, adj_node}
+           child.F.push_back(std::make_pair(node_p, adj_node));
+           children.push_back(child);
+           child.F.pop_back();
+           
+           //We have to choose e2 now
+           for(size_type k =0 ;  k < last_1_tree[node_p].size(); k++){
+                size_type adj_node_2 = last_1_tree[node_p][k];
+
+                //We just forbid this edge if it's not already 
+                //required
+                if(adj_node != adj_node_2 && not_required(R[node_p], adj_node_2)){
+                    child.R[node_p].push_back(adj_node);
+                    child.R[adj_node].push_back(node_p);
+                    if(node_p)
+                        std::cout << node_p << " < - > " << adj_node << "  required\n";
+
+                    child.F.push_back(std::make_pair(node_p, adj_node_2));
+                    children.push_back(child);
+                    child.F.pop_back();
+
+                    if(can_require(R, node_p, adj_node_2)){
+                        child.R[node_p].push_back(adj_node_2);
+                        child.R[adj_node_2].push_back(node_p);
+                        children.push_back(child);
+                    }
+                    break;
+                }
+           }
+       } 
+            
+        assert(children.size() >= 2 && children.size() < 4);
         return children;
     }
 
@@ -121,12 +166,21 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         double delta_delta;
         double deltai;
 
-        
         for(size_type step = 0 ; step < N ; step++){
 
             //We sort the edges based on the current lambda
             graph.fix_lambdas_and_sort_edges(node.get_lambda());
             compute_1_tree(node);
+            if(node.solution_is_2_regular())
+                break;
+            if(node.num_joins != num_nodes - 2){
+                //std::cout << "Voy\n"; 
+                //std::cout << node.num_joins << "\n";
+                node.invalid_node = true;
+                assert(!node.invalid_node); 
+                return;
+            }
+
             if(!step){
                 if(node.is_root_node())
                     t0 = ((double) node.last_total_cost) / (2.0 * num_nodes);
@@ -190,8 +244,9 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
        fprintf(out, "%lu\n", 1UL);
        while(current!=0){
             fprintf(out,"%lu\n", current + 1);
+            size_type tmp = last;
             last = current;
-            if(best_solution[current][0] == last)
+            if(best_solution[current][0] == tmp)
                 current = best_solution[current][1];
             else current = best_solution[current][0];
        }
@@ -215,7 +270,6 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             for(size_type j =0 ; j < R[i].size();j++){
                 ED :: Edge &e = graph.get_backup_edge(i, R[i][j]);
                 dsu.join(i, R[i][j]);
-                std::cout << "Req " << i << " " << R[i][j] << "\n";
                 if(i && R[i][j])
                     joins++;
                 node.last_total_cost += e.get_dist();
@@ -224,7 +278,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
         //The sorted edges will be used to produce the 1-tree
         std::vector<ED :: Edge> &edges = graph.get_edges();
-        for(size_type i = 0 ; i < edges.size() && joins + 2 < graph.num_nodes(); i++){
+        for(size_type i = 0 ; i < edges.size() && edges[i].get_dist() < infinity &&joins + 2 < graph.num_nodes(); i++){
             size_type u = edges[i].get_first().get_id();
             size_type v = edges[i].get_second().get_id();
 
@@ -257,7 +311,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                 node.last_total_cost += edges[i].get_dist();
             }
         }
-        assert(node.last_1_tree[0].size() == 2);
+        node.num_joins = joins;
     }
 
     void HeldKarp :: branch_and_bound(){
@@ -270,6 +324,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         std::priority_queue<SearchNode> q;
         SearchNode root = SearchNode(graph.num_nodes());
         root.root_node = true;
+        root.invalid_node = false;
         q.push(root);
 
         //While there is a node in the search space
@@ -295,7 +350,9 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             else {
                 std::vector<SearchNode> children = node.get_children();
                 for(size_type i=0 ; i < children.size(); i++)
-                    q.push(children[i]);
+                    if(children[i].last_total_cost < 1e9){
+                        q.push(children[i]);
+                    }
             }
         }
 
@@ -303,7 +360,6 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         output_ans();
     
     }
-
 
 };
 

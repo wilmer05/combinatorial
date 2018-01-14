@@ -10,6 +10,7 @@
 namespace ALGORITHM{ //Start of namespace ALGORITHM
 
     const double d_parameter = 0.6;
+    const double infinity = 1e9;
     using size_type = std::size_t;
 
     /**
@@ -76,11 +77,26 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                 of a search node, based on the required and forbidden
                 edges, and adding to them an edge, or a pair of them
             **/
+
+            /**
+                @brief Prints info related to the node just for debugging
+            **/
+            void print();
+
             std::vector<SearchNode> get_children();
 
             //Last two 1-trees found with the required and forbidden
             //Edges of this node
             std::vector<std::vector<size_type> > last_1_tree, last_second_1_tree;
+
+
+            /**
+                @brief indicated if an edge to a given node 
+                belongs to the required nodes
+            **/
+            bool can_require(std::vector<std::vector<size_type> >&R, size_type node_u, size_type node_v);
+
+            bool not_required(std::vector<size_type> &R, size_type node_v);
 
             //Cost of the last solution found
             double last_total_cost;
@@ -92,6 +108,8 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             **/
             std::vector<std::pair<size_type, size_type> > F;
             std::vector<std::vector<size_type> > R;
+            size_type num_joins;
+            bool invalid_node;
         private:
             /**
                 lambda computed for this node so far
