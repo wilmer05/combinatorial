@@ -20,6 +20,11 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         std::cout << "########\n F -> \n";
         for(size_type i = 0 ; i < F.size();i++)
             std::cout << F[i].first << " " << F[i].second <<"\n";
+        std::cout << "Last one tree\n";
+        for(size_type i =0 ; i < last_1_tree.size(); i++)
+            for(size_type j =0 ; j < last_1_tree[i].size(); j++)
+                if(i < last_1_tree[i][j])
+                    std::cout << i << " edge " << last_1_tree[i][j] << "\n";
         std::cout << "--------------------" << std::endl;
         std::cout.flush();
 
@@ -58,12 +63,13 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         child.F = F;
         child.lambda = lambda;
         child.invalid_node = false;
+        child.root_node = false;
 
         bool node_with_required = false;
 
         //p node of the paper
-        size_type node_p;
-        size_type max_counter_node = 0;
+        size_type node_p = 1e9;
+        size_type max_counter_node = 1e9;
         std::vector<size_type> counter(lambda.size(), 0);
         for(size_type i = 0; i < F.size(); i ++){
             counter[F[i].first]++;
@@ -76,8 +82,14 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         //(Heuristic 2 in the paper)
         for(size_type i = 0 ; i < lambda.size(); i++){
 
+            /*we check if we can put an edge as required
+            for(size_type j = 0 ; j < last_1_tree[i].size(); j++)
+                if(R[last_1_tree[i][j]].size() < 2)
+                    cnt_possible++;
+            */
             if(last_1_tree[i].size() > 2){
-                if(R[i].size() < 2 && counter[i] > counter[max_counter_node])
+
+                if(R[i].size() < 2 && (max_counter_node > lambda.size()  || counter[i] > counter[max_counter_node]))
                     max_counter_node = i;
 
                 if(R[i].size() == 1){
@@ -88,8 +100,12 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             }
         }
 
-        if(!node_with_required)
+        if(!node_with_required){
             node_p = max_counter_node;
+        }
+
+       if(node_p > lambda.size())
+            return children;
 
        for(size_type j =0 ; j < last_1_tree[node_p].size() && !children.size(); j++){
 
@@ -112,14 +128,14 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                 if(adj_node != adj_node_2 && not_required(R[node_p], adj_node_2)){
                     child.R[node_p].push_back(adj_node);
                     child.R[adj_node].push_back(node_p);
-                    if(node_p)
-                        std::cout << node_p << " < - > " << adj_node << "  required\n";
 
                     child.F.push_back(std::make_pair(node_p, adj_node_2));
                     children.push_back(child);
                     child.F.pop_back();
 
-                    if(can_require(R, node_p, adj_node_2)){
+                    //It's possible to require e2 only if it's the
+                    //second edge to require
+                    if(1 == child.R[node_p].size() && can_require(R, node_p, adj_node_2)){
                         child.R[node_p].push_back(adj_node_2);
                         child.R[adj_node_2].push_back(node_p);
                         children.push_back(child);
@@ -129,6 +145,13 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
            }
        } 
             
+        
+
+        if(children.size() <2 || children.size() >=4){
+            std::cout << node_p << "\n";
+            print();
+            std::cout << children.size() << "\n";
+        }
         assert(children.size() >= 2 && children.size() < 4);
         return children;
     }
@@ -174,10 +197,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             if(node.solution_is_2_regular())
                 break;
             if(node.num_joins != num_nodes - 2){
-                //std::cout << "Voy\n"; 
-                //std::cout << node.num_joins << "\n";
                 node.invalid_node = true;
-                assert(!node.invalid_node); 
                 return;
             }
 
@@ -211,6 +231,11 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
         //Update lambda function based on the nodes degrees and the t's
         std::vector<double> &lambda = node.get_lambda();
+//        std::cout << tstep << "\n";
+//        std::cout << "Lambda before\n";
+
+//        for(size_type i =0 ; i < lambda.size(); i++)
+//            std::cout << lambda[i] << "\n";
         for(size_type i =0 ; i < lambda.size(); i++){
              lambda[i] += tstep * d_parameter * (1.0 * node.last_1_tree[i].size() - 2.0);
 
@@ -219,6 +244,8 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
              if(step) lambda[i] += tstep * ((1 - d_parameter) * 1.0 * node.last_second_1_tree[i].size() - 2.0);
         } 
     
+//        for(size_type i =0 ; i < lambda.size(); i++)
+//            std::cout << lambda[i] << "\n";
     }
 
 
@@ -259,29 +286,33 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         node.last_second_1_tree = node.last_1_tree;
         DSU :: Dsu dsu(graph.num_nodes());
         std::vector<std::vector<size_type> > &R = node.get_R();
+        std::vector<double> &lambda = node.get_lambda();
 
         //The current 1_tree has the required edges
         node.last_1_tree = R;
         node.last_total_cost = 0 ;
         size_type joins = 0;
 
+        //The sorted edges will be used to produce the 1-tree
+        std::vector<ED :: Edge> &edges = graph.get_edges();
+
         //We update the nodes that are joined by the required edges
         for(size_type i =0 ; i < R.size(); i++) {
             for(size_type j =0 ; j < R[i].size();j++){
                 ED :: Edge &e = graph.get_backup_edge(i, R[i][j]);
-                dsu.join(i, R[i][j]);
-                if(i && R[i][j])
-                    joins++;
+                if(i >= R[i][j])
+                    continue;
                 node.last_total_cost += e.get_dist();
+                if(i && R[i][j]){
+                    joins++;
+                    dsu.join(i, R[i][j]);
+                }
             }
         }
 
-        //The sorted edges will be used to produce the 1-tree
-        std::vector<ED :: Edge> &edges = graph.get_edges();
-        for(size_type i = 0 ; i < edges.size() && edges[i].get_dist() < infinity &&joins + 2 < graph.num_nodes(); i++){
+        for(size_type i = 0 ; i < edges.size() && edges[i].get_dist() < infinity && joins + 1 < graph.num_nodes(); i++){
             size_type u = edges[i].get_first().get_id();
             size_type v = edges[i].get_second().get_id();
-
             //skip if the edge contains the first node as endpoint
             if(!u || !v)
                 continue;
@@ -303,6 +334,9 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         for(size_type i =0 ; i < edges.size() && cnt < 2; i++){
             size_type u = edges[i].get_first().get_id();
             size_type v = edges[i].get_second().get_id();
+            if(std::count(R[0].begin(), R[0].end(), u) || std::count(R[0].begin(), R[0].end(), v))
+                continue;
+
             if(!u || !v) {
                 cnt++;
                 node.last_1_tree[u].push_back(v);
@@ -310,6 +344,10 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
                 node.last_total_cost += edges[i].get_dist();
             }
+        }
+
+        for(size_type i =0 ; i < lambda.size();i++){
+            node.last_total_cost += lambda[i] * (node.last_1_tree[i].size() - 2.0);
         }
         node.num_joins = joins;
     }
@@ -321,7 +359,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         graph.generate_edges();
 
         //Best bound heuristic
-        std::priority_queue<SearchNode> q;
+        std::queue<SearchNode> q;
         SearchNode root = SearchNode(graph.num_nodes());
         root.root_node = true;
         root.invalid_node = false;
@@ -329,7 +367,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
         //While there is a node in the search space
         while(!q.empty()){
-            SearchNode node = q.top();
+            SearchNode node = q.front();
             q.pop();
 
             //We run HeldKarp algorithm
@@ -337,8 +375,9 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
             //If the tree found has a worse cost than the best
             //found so far then we discard the node
-            if(node.last_total_cost >= U)
+            if(node.last_total_cost >= U || node.invalid_node)
                 continue;
+
             
             //If the tree found is 2-regular, then we
             //update our solution
