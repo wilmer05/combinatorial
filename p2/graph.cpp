@@ -82,7 +82,7 @@ void Graph::fix_forbidden_edges(std::vector<std::pair<size_type, size_type > > &
         assert(R[i].size() <= 2);
         if(R[i].size() == 2){
             for(size_type j = 0; j < R.size(); j++)
-                if(R[i][0] != j && R[i][1] != j){
+                if(R[i][0] != j && R[i][1] != j && i != j){
                     _edges[get_edge_index(i, j)].dist = 1e18;
                 }
                     

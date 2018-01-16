@@ -4,6 +4,7 @@
 #include<utility>
 #include<queue>
 #include<cmath>
+#include<stack>
 #include"graph.hpp"
 #include"dsu.hpp"
 #include"held_karp.hpp"
@@ -59,6 +60,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             return children;
         //Tmp variable to generate every child
         SearchNode child;
+	child.last_total_cost = 0.0;
         child.R = R;
         child.F = F;
         child.lambda = lambda;
@@ -366,20 +368,21 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         U = 1e18;
 
         //We generate here n^2 edges
+	//std::cout << "BLA1\n";
         graph.generate_edges();
 
         //Best bound heuristic
-        std::priority_queue<SearchNode> q;
+        std::stack<SearchNode> q;
         SearchNode root = SearchNode(graph.num_nodes());
         root.root_node = true;
         root.invalid_node = false;
+	root.last_1_tree.clear();
         q.push(root);
 
         //While there is a node in the search space
         while(!q.empty()){
             SearchNode node = q.top();
             q.pop();
-
             //We run HeldKarp algorithm
             run_HK(node); 
 
