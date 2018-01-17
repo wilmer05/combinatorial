@@ -99,8 +99,14 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
             bool not_required(std::vector<size_type> &R, size_type node_v);
 
+
+
+
+	    bool check_1_tree();
+
             //Cost of the last solution found
             double last_total_cost;
+	    double actual_cost;
 
             bool root_node;
 
@@ -172,6 +178,8 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                 @brief we update the lambda function of the current node based on the time step and the ti of the current step
             **/
             void update_lambda_function(SearchNode &node, double tstep);
+
+	    void set_upper_bound();
 
     };
 

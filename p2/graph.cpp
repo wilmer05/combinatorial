@@ -73,7 +73,7 @@ void Graph::fix_forbidden_edges(std::vector<std::pair<size_type, size_type > > &
     //We change the cost to infinity of every edge in the 
     //list F
     for(size_type i =0 ; i < F.size(); i++){
-        _edges[get_edge_index(F[i].first, F[i].second)].dist = 1e18;
+        _edges[get_edge_index(F[i].first, F[i].second)].dist = 1e14;
     }
 
     //If there is a node with 2 required edges
@@ -83,7 +83,7 @@ void Graph::fix_forbidden_edges(std::vector<std::pair<size_type, size_type > > &
         if(R[i].size() == 2){
             for(size_type j = 0; j < R.size(); j++)
                 if(R[i][0] != j && R[i][1] != j && i != j){
-                    _edges[get_edge_index(i, j)].dist = 1e18;
+                    _edges[get_edge_index(i, j)].dist = 1e14;
                 }
                     
         }

@@ -40,6 +40,29 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         return !std::count(R.begin(), R.end(), node_v);
     }
 
+    bool SearchNode :: check_1_tree(){
+	std::vector<bool> visited(last_1_tree.size(), false);
+	std::stack<size_type> q;
+	q.push(0);
+	visited[0] = true;
+	size_type total_edges = 0;
+	while(q.size()){
+	    size_type nod = q.top();
+	    q.pop();
+	    for(size_type i =0 ; i < last_1_tree[nod].size(); i++){
+		size_type neighour = last_1_tree[nod][i];
+		total_edges++;
+		if(!visited[neighour]){
+		    visited[neighour] = true;
+		    q.push(neighour);
+		}
+	    }
+			
+	}
+	return !std::count(visited.begin(), visited.end(), false) && last_1_tree[0].size() == 2 && total_edges == 2 * visited.size();
+
+    }
+
     bool SearchNode :: solution_is_2_regular(){
     
         bool regular_2 = true;
@@ -84,11 +107,6 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         //(Heuristic 2 in the paper)
         for(size_type i = 0 ; i < lambda.size() && node_p >= lambda.size(); i++){
 
-            /*we check if we can put an edge as required
-            for(size_type j = 0 ; j < last_1_tree[i].size(); j++)
-                if(R[last_1_tree[i][j]].size() < 2)
-                    cnt_possible++;
-            */
             if(last_1_tree[i].size() > 2){
 
                 if(!R[i].size() && (max_counter_node >= lambda.size()  || counter[i] > counter[max_counter_node]))
@@ -198,12 +216,8 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             //We sort the edges based on the current lambda
             graph.fix_lambdas_and_sort_edges(node.get_lambda());
             compute_1_tree(node);
-            if(node.solution_is_2_regular())
+            if(node.check_1_tree() && node.solution_is_2_regular())
                 break;
-            if(node.num_joins != num_nodes - 2){
-                node.invalid_node = true;
-                return;
-            }
 
             if(!step){
                 if(node.is_root_node())
@@ -353,7 +367,8 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                 node.last_total_cost += edges[i].get_dist();
             }
         }
-
+	assert(node.last_1_tree[0].size() == 2);
+	node.actual_cost = node.last_total_cost;
         for(size_type i =0 ; i < lambda.size();i++){
             node.last_total_cost += lambda[i] * (node.last_1_tree[i].size() - 2.0);
         }
@@ -364,15 +379,26 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         node.num_joins = joins;
     }
 
+    void HeldKarp :: set_upper_bound() {
+
+	U =0.0;
+	best_solution = std::vector<std::vector<size_type> >(graph.num_nodes());
+	for(size_type i =0 ; i < graph.num_nodes(); i++){
+	    U += graph.get_distance(i, (i+1) % graph.num_nodes());
+	    best_solution[i].push_back((i+1) % graph.num_nodes());
+	    best_solution[(1+i) % graph.num_nodes()].push_back(i);
+	}
+
+    }
+
     void HeldKarp :: branch_and_bound(){
-        U = 1e18;
 
         //We generate here n^2 edges
 	//std::cout << "BLA1\n";
         graph.generate_edges();
-
+	set_upper_bound();
         //Best bound heuristic
-        std::stack<SearchNode> q;
+        std::priority_queue<SearchNode> q;
         SearchNode root = SearchNode(graph.num_nodes());
         root.root_node = true;
         root.invalid_node = false;
@@ -388,13 +414,15 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
             //If the tree found has a worse cost than the best
             //found so far then we discard the node
-            if((1.0-1e-6) * node.last_total_cost >= U || node.invalid_node)
+	    std::cout << node.last_total_cost << "\n";
+	    std::cout << node.actual_cost << "\n";
+            if((1.0-1e-3) * node.last_total_cost >= U || node.invalid_node)
                 continue;
 
             
             //If the tree found is 2-regular, then we
             //update our solution
-            if(node.solution_is_2_regular()){
+            if(node.check_1_tree() && node.solution_is_2_regular()){
                 U = node.last_total_cost;
                 best_solution = node.last_1_tree;
             }
@@ -406,6 +434,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                         q.push(children[i]);
                     }
             }
+	    std::cout << node.last_total_cost<<"=L  U=" <<U << "\n";
         }
 
         //End of the search space, we print the best solution
