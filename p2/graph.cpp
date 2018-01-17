@@ -51,7 +51,7 @@ Graph::~Graph()
     _nodes.clear();
 }
 
-Edge::Edge (Node u, Node v, int d) : node_u(u), node_v(v), dist(d)
+Edge::Edge (Node *u, Node *v, double d) : node_u(u), node_v(v), dist(d)
 {}
 
 void Graph :: generate_edges(){
@@ -96,6 +96,9 @@ void Graph::fix_lambdas_and_sort_edges(std::vector<double> &lambdas){
         _nodes[i].set_lambda(lambdas[i]);
     
     sort(_edges.begin(), _edges.end()); 
+    /*std::cout << "##############\n";
+    for(size_type i =0 ; i < _edges.size(); i++)
+        std::cout << _edges[i].dist << " ids=" <<_edges[i].get_first()->get_id() << ", " << _edges[i].get_second()->get_id()<<" <-> " <<" lambdas" << _edges[i].get_first()->get_lambda() << " " << _edges[i].get_second()->get_lambda() << "\n";*/
 }
 
 void Graph::add_edge(NodeId node1_id, NodeId node2_id)
@@ -116,7 +119,7 @@ void Graph::add_edge(NodeId node1_id, NodeId node2_id)
    impl(node2_id, node1_id);
 
    _num_edges+=2;
-   _backup_edges.push_back(ED :: Edge(_nodes[node1_id], _nodes[node2_id], get_distance(node1_id, node2_id)));
+   _backup_edges.push_back(ED :: Edge(&_nodes[node1_id], &_nodes[node2_id], get_distance(node1_id, node2_id)));
 }
 
 void Graph::set_coordinates(size_type node, double new_x, double new_y){

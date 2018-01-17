@@ -114,7 +114,7 @@ class Edge
         /**
             Constructor to build an edge
         **/
-        Edge(Node  node_u, Node  node_v, int d);
+        Edge(Node  *node_u, Node  *node_v, double d);
 
         Edge(const Edge &e) : node_u(e.node_u), node_v(e.node_v), dist(e.dist){
         
@@ -124,14 +124,14 @@ class Edge
             Redefining < operator to sort the edges only once
         **/
         bool operator<(const Edge &ot) const{
-            return dist + node_u.get_lambda() + node_v.get_lambda() < ot.dist + ot.node_u.get_lambda() + ot.node_v.get_lambda();
+            return dist + node_u->get_lambda() + node_v->get_lambda() < ot.dist + ot.node_u->get_lambda() + ot.node_v->get_lambda();
         }
         
-        Node & get_first(){
+        Node *get_first(){
             return node_u;
         }
 
-        Node &get_second(){
+        Node *get_second(){
             return node_v;
         }
 
@@ -141,8 +141,8 @@ class Edge
 
     private:
         friend class Graph;
-        Node node_u;
-        Node node_v;
+        Node *node_u;
+        Node *node_v;
         double dist;
 };
 

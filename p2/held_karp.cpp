@@ -42,7 +42,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
     bool SearchNode :: check_1_tree(){
 	std::vector<bool> visited(last_1_tree.size(), false);
-	std::stack<size_type> q;
+	std::priority_queue<size_type> q;
 	q.push(0);
 	visited[0] = true;
 	size_type total_edges = 0;
@@ -212,7 +212,6 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         double deltai;
 
         for(size_type step = 0 ; step < N ; step++){
-
             //We sort the edges based on the current lambda
             graph.fix_lambdas_and_sort_edges(node.get_lambda());
             compute_1_tree(node);
@@ -333,8 +332,8 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         }
 
         for(size_type i = 0 ; i < edges.size() && edges[i].get_dist() < infinity && joins + 1 < graph.num_nodes(); i++){
-            size_type u = edges[i].get_first().get_id();
-            size_type v = edges[i].get_second().get_id();
+            size_type u = edges[i].get_first()->get_id();
+            size_type v = edges[i].get_second()->get_id();
             //skip if the edge contains the first node as endpoint
             if(!u || !v)
                 continue;
@@ -354,8 +353,8 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         //to add the first node
         int cnt = node.last_1_tree[0].size();
         for(size_type i =0 ; i < edges.size() && cnt < 2; i++){
-            size_type u = edges[i].get_first().get_id();
-            size_type v = edges[i].get_second().get_id();
+            size_type u = edges[i].get_first()->get_id();
+            size_type v = edges[i].get_second()->get_id();
             if(std::count(R[0].begin(), R[0].end(), u) || std::count(R[0].begin(), R[0].end(), v))
                 continue;
 
@@ -398,7 +397,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         graph.generate_edges();
 	set_upper_bound();
         //Best bound heuristic
-        std::priority_queue<SearchNode> q;
+        std::stack<SearchNode> q;
         SearchNode root = SearchNode(graph.num_nodes());
         root.root_node = true;
         root.invalid_node = false;
@@ -414,8 +413,6 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
             //If the tree found has a worse cost than the best
             //found so far then we discard the node
-	    std::cout << node.last_total_cost << "\n";
-	    std::cout << node.actual_cost << "\n";
             if((1.0-1e-3) * node.last_total_cost >= U || node.invalid_node)
                 continue;
 
@@ -434,7 +431,6 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                         q.push(children[i]);
                     }
             }
-	    std::cout << node.last_total_cost<<"=L  U=" <<U << "\n";
         }
 
         //End of the search space, we print the best solution
