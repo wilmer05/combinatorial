@@ -198,9 +198,12 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
         //N changes depending on wether this node is the root
         //or not
-        size_type N = (num_nodes + 3) / 4 + 5;
-        if(node.is_root_node())
+        double N = (num_nodes + 3) / 4 + 5;
+        if(node.is_root_node()){
             N = (num_nodes * num_nodes + 49) / 50 + num_nodes + 15;
+	    //N = 0.3 * N;
+	}
+	//if(node.is_root_node()) std :: cout << " " << N << "\n";
        
         //We restart the last_1_tree
         node.last_1_tree = std::vector<std::vector<size_type> >(num_nodes, std::vector<size_type>()); 
@@ -231,6 +234,11 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                 deltai = delta0;
                 tstep = t0;
             }
+	    /*if(node.is_root_node()){
+	    std:: cout << "tstep= " << tstep << " step=" << step;
+	    std:: cout << deltai << " " << delta_delta << "\n";
+	    for(size_type i =0 ; i < node.lambda.size() ; i++)
+		std::cout << node.lambda[i] << "\n";}*/
             update_lambda_function(node, tstep);
             tstep -= deltai;
             deltai -= delta_delta;
@@ -496,7 +504,8 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         graph.generate_edges();
 	    set_upper_bound();
         //Best bound heuristic
-        std::stack<SearchNode> q;
+        std::priority_queue<SearchNode> q;
+        //std::stack<SearchNode> q;
         SearchNode root = SearchNode(graph.num_nodes());
         root.root_node = true;
         root.invalid_node = false;
