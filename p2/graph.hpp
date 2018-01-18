@@ -78,6 +78,7 @@ public:
         return lambda;
    }
 
+   double lambda;
 private:
    friend class Graph;
 
@@ -92,7 +93,6 @@ private:
    std::vector<NodeId> _neighbors;
 
    double x,y;
-   double lambda;
    size_type id;
 }; // class Node
 
@@ -237,6 +237,8 @@ public:
     void reset_edges();
 
     Edge &get_edge(size_type idx);
+    
+    Edge &get_edge(size_type u, size_type v);
 
     Edge &get_backup_edge(size_type u, size_type v);
 

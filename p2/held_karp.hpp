@@ -11,6 +11,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
     const double d_parameter = 0.6;
     const double infinity = 1e9;
+    const double epsilon = 1e-6;
     using size_type = std::size_t;
 
     /**
@@ -117,7 +118,6 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             std::vector<std::vector<size_type> > R;
             size_type num_joins;
             bool invalid_node;
-        private:
             /**
                 lambda computed for this node so far
             **/
@@ -173,6 +173,13 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                 the required and forbidden edges
             **/
             void compute_1_tree(SearchNode &node);
+
+            double get_lambda_edge_cost(SearchNode &node, size_type u, size_type v);
+
+            /**
+                @brief Runs Prim's algorithm
+            **/
+            void prims(SearchNode &node);
 
             /**
                 @brief we update the lambda function of the current node based on the time step and the ti of the current step

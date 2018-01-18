@@ -35,6 +35,11 @@ Edge & Graph :: get_edge(size_type idx){
     return _edges[idx];
 }
 
+
+Edge & Graph:: get_edge(size_type u, size_type v){
+    return _edges[get_edge_index(u,v)];
+}
+
 Edge & Graph :: get_backup_edge(size_type u, size_type v){
     return _backup_edges[get_edge_index(u,v)];
 
@@ -95,7 +100,7 @@ void Graph::fix_lambdas_and_sort_edges(std::vector<double> &lambdas){
     for(size_type i =0 ; i < lambdas.size(); i++)
         _nodes[i].set_lambda(lambdas[i]);
     
-    sort(_edges.begin(), _edges.end()); 
+    //sort(_edges.begin(), _edges.end()); 
     /*std::cout << "##############\n";
     for(size_type i =0 ; i < _edges.size(); i++)
         std::cout << _edges[i].dist << " ids=" <<_edges[i].get_first()->get_id() << ", " << _edges[i].get_second()->get_id()<<" <-> " <<" lambdas" << _edges[i].get_first()->get_lambda() << " " << _edges[i].get_second()->get_lambda() << "\n";*/

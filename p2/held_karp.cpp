@@ -83,7 +83,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             return children;
         //Tmp variable to generate every child
         SearchNode child;
-	child.last_total_cost = 0.0;
+	    child.last_total_cost = 0.0;
         child.R = R;
         child.F = F;
         child.lambda = lambda;
@@ -214,7 +214,9 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         for(size_type step = 0 ; step < N ; step++){
             //We sort the edges based on the current lambda
             graph.fix_lambdas_and_sort_edges(node.get_lambda());
-            compute_1_tree(node);
+            //compute_1_tree(node);
+            prims(node);
+            //node.print();
             if(node.check_1_tree() && node.solution_is_2_regular())
                 break;
 
@@ -242,6 +244,7 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             sum_lambda_root *= (0.5 / num_nodes);
         }
 
+        node.last_total_cost *= (1.0 - epsilon);
     }
 
     void HeldKarp :: update_lambda_function(SearchNode &node, double tstep) {
@@ -301,6 +304,102 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             fprintf(out,"-1\nEOF");
        }
        std::cout << sol << "\n";
+    }
+
+    double HeldKarp :: get_lambda_edge_cost(SearchNode &node, size_type u, size_type v){
+        return graph.get_edge(u, v).get_dist() + node.lambda[u] + node.lambda[v];
+    }
+
+    void HeldKarp :: prims(SearchNode &node){
+        node.last_second_1_tree = node.last_1_tree;
+        size_type num_nodes = node.R.size();
+        
+        std::vector<size_type> best_edge_to_add(num_nodes, 1);
+        std::vector<bool> in_tree(num_nodes, false);
+        node.last_1_tree = std::vector<std::vector<size_type> > (num_nodes);
+        std::vector<std::vector<size_type> > &R = node.get_R();
+        in_tree[1] = true;
+        node.last_total_cost = 0.0;
+        for(;;){
+            size_type connect_node = 1e9;
+            double best_found = infinity;
+            //we find the best cost edge to add this to the 1
+            for(size_type j = 1; j < num_nodes; j++){
+                if(in_tree[j]) continue;
+
+                size_type neigh = best_edge_to_add[j];
+
+                if(!node.not_required(R[j], neigh)){
+                    connect_node = j;
+                    break;
+                }
+                double cost = get_lambda_edge_cost(node, j, neigh) ; //graph.get_edge(j, neigh).get_dist() + node.lambda(j) + node.lambda(neigh); 
+                if(cost < best_found){
+                    best_found = cost;
+                    connect_node = j;
+                }
+            }
+
+            if(connect_node >= num_nodes){
+                break;
+            }
+
+            size_type neigh = best_edge_to_add[connect_node];
+            node.last_1_tree[neigh].push_back(connect_node);
+            node.last_1_tree[connect_node].push_back(neigh);
+            in_tree[connect_node] = true;
+            //node.last_total_cost += best_found;
+            node.last_total_cost += graph.get_edge(connect_node, neigh).get_dist();
+
+            //Now we find if connecting other nodes to the new node connect node is better 
+            for(size_type i =2 ; i < num_nodes; i++){
+                if(in_tree[i]) continue;
+                size_type neigh = best_edge_to_add[i];
+                double cost = get_lambda_edge_cost(node, connect_node, i); //graph.get_edge(connect_node, i).get_dist() + node.lambda(i) + node.lambda(connect_node);
+                double current_cost = get_lambda_edge_cost(node, neigh, i); //graph.get_edge(neigh, i).get_dist() + node.lambda(i) + node.lambda(neigh);
+
+                if( !node.not_required(R[i], connect_node) || cost < current_cost )
+                    best_edge_to_add[i] = connect_node;
+            }
+            
+        }
+
+        //We have to add now the best two edges from node 0
+        //These are the index of the best two neighbours
+        size_type idx0 = 1,idx1 = 2; 
+        if(get_lambda_edge_cost(node, 0, 1) >= get_lambda_edge_cost(node, 0, 2) || !node.not_required(R[0], 2))
+            std::swap(idx0, idx1);
+        for(size_type i =3 ; i < R.size(); i++){
+            if(!node.not_required(R[0], i)){ 
+                idx1 = i;
+                std::swap(idx1,idx0);
+            }else {
+                 double cost = get_lambda_edge_cost(node, 0, idx1); 
+                 double cost_0 = get_lambda_edge_cost(node, 0, idx0); 
+                 double new_cost = get_lambda_edge_cost(node, 0, i);
+                 if(node.not_required(R[0], idx1) && cost > new_cost)
+                    idx1 = i;
+                 double tmp_cost = get_lambda_edge_cost(node, 0, idx1);
+                 if(tmp_cost < cost_0 && node.not_required(R[0], idx0))
+                    std::swap(idx1, idx0);
+                 
+            }
+        }
+        node.last_1_tree[0].push_back(idx0);
+        node.last_1_tree[0].push_back(idx0);
+        node.last_1_tree[idx1].push_back(0);
+        node.last_1_tree[idx0].push_back(0);
+        node.last_total_cost += graph.get_edge(0, idx0).get_dist();
+        node.last_total_cost += graph.get_edge(0, idx1).get_dist();
+        
+        std::vector<double> &lambda = node.get_lambda();
+        for(size_type i =0 ; i < lambda.size();i++){
+            node.last_total_cost += lambda[i] * (node.last_1_tree[i].size() - 2.0);
+        }
+
+        if(!node.last_second_1_tree.size())
+            node.last_second_1_tree = node.last_1_tree;
+        //node.print();
     }
 
     void HeldKarp :: compute_1_tree(SearchNode &node){
@@ -366,8 +465,8 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
                 node.last_total_cost += edges[i].get_dist();
             }
         }
-	assert(node.last_1_tree[0].size() == 2);
-	node.actual_cost = node.last_total_cost;
+	    assert(node.last_1_tree[0].size() == 2);
+	    node.actual_cost = node.last_total_cost;
         for(size_type i =0 ; i < lambda.size();i++){
             node.last_total_cost += lambda[i] * (node.last_1_tree[i].size() - 2.0);
         }
@@ -395,25 +494,27 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
         //We generate here n^2 edges
 	//std::cout << "BLA1\n";
         graph.generate_edges();
-	set_upper_bound();
+	    set_upper_bound();
         //Best bound heuristic
         std::stack<SearchNode> q;
         SearchNode root = SearchNode(graph.num_nodes());
         root.root_node = true;
         root.invalid_node = false;
-	root.last_1_tree.clear();
+	    root.last_1_tree.clear();
+
+        run_HK(root); 
         q.push(root);
+        std::cout << U << "=U\n";
 
         //While there is a node in the search space
         while(!q.empty()){
             SearchNode node = q.top();
             q.pop();
             //We run HeldKarp algorithm
-            run_HK(node); 
 
             //If the tree found has a worse cost than the best
             //found so far then we discard the node
-            if((1.0-1e-3) * node.last_total_cost >= U || node.invalid_node)
+            if(node.last_total_cost >= U || node.invalid_node)
                 continue;
 
             
@@ -421,15 +522,18 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             //update our solution
             if(node.check_1_tree() && node.solution_is_2_regular()){
                 U = node.last_total_cost;
+                std::cout << U << "=U\n";
                 best_solution = node.last_1_tree;
             }
             //Otherwise we look for the children
             else {
                 std::vector<SearchNode> children = node.get_children();
-                for(size_type i=0 ; i < children.size(); i++)
+                for(size_type i=0 ; i < children.size(); i++){
+                    run_HK(children[i]);
                     if(children[i].last_total_cost < 1e9){
                         q.push(children[i]);
                     }
+                }
             }
         }
 
