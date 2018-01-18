@@ -217,7 +217,7 @@ public:
    /**
    @brief Sort the edges of a graph by cost
    **/
-   void fix_lambdas_and_sort_edges( std::vector<double> &lambdas);
+   void fix_lambdas( std::vector<double> &lambdas);
 
    /**
    @brief Generates every edge in the graph

@@ -102,13 +102,22 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
 
 
-
-	    bool check_1_tree();
+            /**
+                @brief Check if a solution found is actually a 1-tree
+                just to make sure that there are not cycles on other 
+                length than n
+            **/
+	        bool check_1_tree();
 
             //Cost of the last solution found
             double last_total_cost;
-	    double actual_cost;
 
+            //Actual cost of the last 1_tree (without including 
+            //the lambdas)
+	        double actual_cost;
+
+            //Boolean that indicates if it's the first node
+            //in the search space
             bool root_node;
 
             /**
@@ -116,8 +125,13 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             **/
             std::vector<std::pair<size_type, size_type> > F;
             std::vector<std::vector<size_type> > R;
-            size_type num_joins;
+
+            /**
+                @brief a node is not valid when it has a cycle
+                with the required edges that is not a tour
+            **/ 
             bool invalid_node;
+
             /**
                 lambda computed for this node so far
             **/
@@ -169,15 +183,14 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
 
 
             /**
-                @brief computes the min weight 1-tree based on 
-                the required and forbidden edges
+                @brief get the cost of an edge between u and v
+                including the lambdas of u and v
             **/
-            void compute_1_tree(SearchNode &node);
-
             double get_lambda_edge_cost(SearchNode &node, size_type u, size_type v);
 
             /**
-                @brief Runs Prim's algorithm
+                @brief computes the min weight 1-tree based on 
+                the required and forbidden edges in the SearchNode
             **/
             void prims(SearchNode &node);
 
@@ -186,7 +199,10 @@ namespace ALGORITHM{ //Start of namespace ALGORITHM
             **/
             void update_lambda_function(SearchNode &node, double tstep);
 
-	    void set_upper_bound();
+            /**
+                @brief function to compute a first upper bound
+            **/
+	        void set_upper_bound();
 
     };
 

@@ -95,15 +95,11 @@ void Graph::fix_forbidden_edges(std::vector<std::pair<size_type, size_type > > &
     }
 }
 
-void Graph::fix_lambdas_and_sort_edges(std::vector<double> &lambdas){
+void Graph::fix_lambdas(std::vector<double> &lambdas){
     
     for(size_type i =0 ; i < lambdas.size(); i++)
         _nodes[i].set_lambda(lambdas[i]);
     
-    //sort(_edges.begin(), _edges.end()); 
-    /*std::cout << "##############\n";
-    for(size_type i =0 ; i < _edges.size(); i++)
-        std::cout << _edges[i].dist << " ids=" <<_edges[i].get_first()->get_id() << ", " << _edges[i].get_second()->get_id()<<" <-> " <<" lambdas" << _edges[i].get_first()->get_lambda() << " " << _edges[i].get_second()->get_lambda() << "\n";*/
 }
 
 void Graph::add_edge(NodeId node1_id, NodeId node2_id)
