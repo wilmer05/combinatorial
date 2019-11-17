@@ -175,7 +175,7 @@ Node const & Graph::node(NodeId const id) const
 inline
 void Graph::add_node()
 {
-   _nodes.push_back(Node::Node());
+   _nodes.push_back(Node());
 }
 
 } // namespace ED
